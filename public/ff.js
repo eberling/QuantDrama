@@ -18,74 +18,32 @@ async function main() {
   // );
 
   const transcripts = await getTranscript(
-    "http://www.chakoteya.net/DS9/432.htm"
+    "http://www.chakoteya.net/DS9/414.htm"
   );
 
   //console.log(transcripts.text());
   //
+  transcripts.each((i, e) => {
+    const $ = cheerio.load(e);
+    const line = $.text();
+    console.log($.text());
+  });
 
-  // require("fs").writeFile(
-  //   "./obana2.json",
-  //   JSON.stringify(transcripts.data),
-  //   function(err) {
-  //     if (err) {
-  //       console.error("Crap happens");
-  //     }
-  //   }
-  // );
+  require("fs").writeFile(
+    "./obana2.json",
+    JSON.stringify(transcripts.data),
+    function(err) {
+      if (err) {
+        console.error("Crap happens");
+      }
+    }
+  );
 }
 
 const getTranscript = async url => {
   try {
     const html = await axios.get(url);
-    const $ = cheerio.load(html.data);
-    const transcriptNodes = $("div font");
-    console.log("important");
-    const nonUniqueChars = transcriptNodes.text().match(/[A-Z][?'A-Z]+(?=:)/g);
-    const dedupe = new Set(nonUniqueChars);
-    const characters = [...dedupe];
-    console.warn("what is this: ");
-    console.log("\n");
-
-    const epTranscript = {
-      epTitle: $("body>p>font>b").text(),
-      epScenes: [],
-      epCharacters: characters
-    };
-
-    transcriptNodes.each((i, node) => {
-      const $ = cheerio.load(node);
-      // Check for Narration
-      if ($("i").text()) {
-        console.warn(
-          "narration found: ",
-          $("i")
-            .text()
-            .slice(0, 10)
-        );
-        return;
-      }
-      // Get Scene Name
-      else if ($("b").text()) {
-        const sceneTitle = $("b").text();
-        if (sceneTitle) {
-          console.log("New Scene: ", sceneTitle);
-          epTranscript.epScenes.push({
-            sceneTitle: sceneTitle,
-            sceneChars: []
-          });
-          return;
-        } else {
-          console.warn("Something went wrong - no Scene Name Found");
-        }
-      }
-      // Get Scene Characters
-      else if ((epTranscript.epScenes.slice(-1)[0].sceneChars.length = 0)) {
-        const sceneDialog = $("*").text();
-        //epTranscript.epScenes.slice(-1)[0].sceneChars.push();
-        console.log("kein test", sceneDialog.slice(0, 30));
-      }
-    });
+    return cheerio.load(html.data)("div p");
   } catch (e) {
     console.log("[error getting Transcripts] ", e);
   }
@@ -95,12 +53,11 @@ const getLinks = async url => {
   try {
     const html = await axios.get(url);
     const $ = cheerio.load(html.data);
-    links = $("table table a[href]")
+    return (links = $("table table a[href]")
       .map((i, e) => {
         return $(e).attr("href");
       })
-      .get();
-    return links;
+      .get());
   } catch (e) {
     console.log("[error getting Links] ", e);
   }
