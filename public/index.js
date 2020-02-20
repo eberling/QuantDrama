@@ -39,56 +39,67 @@ const getTranscript = async url => {
   try {
     const html = await axios.get(url);
     const $ = cheerio.load(html.data);
-    const transcriptNodes = $("div font");
+    const transcriptNodes = $("div p font");
     console.log("important");
     const nonUniqueChars = transcriptNodes.text().match(/[A-Z][?'A-Z]+(?=:)/g);
     const dedupe = new Set(nonUniqueChars);
     const characters = [...dedupe];
-    console.warn("what is this: ");
+    console.warn("# of Characters: ", characters.length);
+    console.log(characters);
     console.log("\n");
 
-    const epTranscript = {
+    const episode = {
       epTitle: $("body>p>font>b").text(),
-      epScenes: [],
-      epCharacters: characters
+      epCharacters: characters,
+      epScenes: []
     };
 
-    transcriptNodes.each((i, node) => {
+    const charsAndScenes = transcriptNodes.map((i, node) => {
       const $ = cheerio.load(node);
-      // Check for Narration
-      if ($("i").text()) {
-        console.warn(
-          "narration found: ",
-          $("i")
-            .text()
-            .slice(0, 10)
-        );
-        return;
-      }
-      // Get Scene Name
-      else if ($("b").text()) {
-        const sceneTitle = $("b").text();
-        if (sceneTitle) {
-          console.log("New Scene: ", sceneTitle);
-          epTranscript.epScenes.push({
-            sceneTitle: sceneTitle,
-            sceneChars: []
-          });
-          return;
-        } else {
-          console.warn("Something went wrong - no Scene Name Found");
-        }
-      }
-      // Get Scene Characters
-      else if ((epTranscript.epScenes.slice(-1)[0].sceneChars.length = 0)) {
-        const sceneDialog = $("*").text();
-        //epTranscript.epScenes.slice(-1)[0].sceneChars.push();
-        console.log("kein test", sceneDialog.slice(0, 30));
+      // some episodes start with a "last time..." intro
+      if (i === 0 && !$("b").text()) {
+        console.log("strange", $("b").text(), i);
+        console.log("Last time... discarded", $("*").text());
+      } else if ($("b").text()) {
+        return getScene(i, node);
+      } else {
+        return getSceneChars(node);
       }
     });
+    console.log(charsAndScenes.get());
   } catch (e) {
     console.log("[error getting Transcripts] ", e);
   }
+};
+
+const getScene = (i, node) => {
+  const $ = cheerio.load(node);
+  const sceneTitle = $("b").text();
+  if (sceneTitle) {
+    console.log("New Scene!: ", sceneTitle);
+    return sceneTitle;
+    // epTranscript.epScenes.push({
+    //   sceneTitle: sceneTitle,
+    //   sceneChars: []
+    // });
+  } else {
+    console.warn("Something went wrong - no Scene Name Found");
+  }
+};
+
+const getSceneChars = node => {
+  // let epScene = {
+  //   sceneTitle: sceneTitle,
+  //   sceneChars: []
+  // }
+  //       else if ((epTranscript.epScenes.slice(-1)[0].sceneChars)) {
+  const $ = cheerio.load(node);
+  const sceneDialog = $("*").text();
+  const nonUniqueCharsInScene = sceneDialog.match(/[A-Z][?'A-Z]+(?=:)/g);
+  const dedupe = new Set(nonUniqueCharsInScene);
+  const uniqueCharsInScene = [...dedupe];
+  console.log("Chars in Scene:", uniqueCharsInScene.slice(0, 30));
+  return uniqueCharsInScene;
 };
 
 const getLinks = async url => {
