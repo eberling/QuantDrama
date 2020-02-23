@@ -4,6 +4,11 @@ const cheerio = require("cheerio");
 var admin = require("firebase-admin");
 var serviceAccount = require("../firebase-admin-token.json");
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://quantdrama.firebaseio.com"
+});
+
 class Episode {
   epTitle;
   epChars;
@@ -23,23 +28,16 @@ class EpScene {
   }
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://quantdrama.firebaseio.com"
-});
-
 async function main() {
-  const links = await getLinks(site + "episodes.htm");
-  // const transcripts = Promise.all(
+  const links = await getLinks(site + "episodes.htm", 1);
+  // const episodes = Promise.all(
   //   links.map((link, i) => {
-  //     return getTranscript(site + link);
+  //     return getEpisode(site + link);
   //   })
   // );
 
   const episode = await getEpisode("http://www.chakoteya.net/DS9/447.htm");
   console.log(episode.epScenes);
-  //console.log(transcripts.text());
-  //
 
   // require("fs").writeFile(
   //   "./obana2.json",
@@ -58,14 +56,11 @@ const getEpisode = async url => {
     const html = await axios.get(url);
     const $ = cheerio.load(html.data);
     episode.epTitle = $("body>p>font>b").text();
-
     const transcript = $("div font");
     const nonUniqueChars = getChars(transcript.text());
     const dedupe = new Set(nonUniqueChars);
     episode.epChars = [...dedupe];
-
     const dialogAndScenes = transcript.text().split(/(\[(?:(?!\[).)+\])(?!:)/g);
-
     dialogAndScenes.forEach((element, i) => {
       const isScene = element.match(/^(\[.*\])$/g);
       if (isScene) {
@@ -97,16 +92,23 @@ const getChars = text => {
   return uniqueChars;
 };
 
-const getLinks = async url => {
+const getLinks = async (url, season = 0) => {
   try {
     const html = await axios.get(url);
     const $ = cheerio.load(html.data);
-    links = $("table table a[href]")
-      .map((i, e) => {
-        return $(e).attr("href");
-      })
-      .get();
-    return links;
+    if (season === 0) {
+      console.log("getting all seasons");
+      links = $("table table a[href]")
+        .map((i, e) => $(e).attr("href"))
+        .get();
+      return links;
+    } else {
+      console.log("getting season: ", season);
+      links = $(`table tr:nth-child(${season * 2 + 1}) table a[href]`)
+        .map((i, e) => $(e).attr("href"))
+        .get();
+      return links;
+    }
   } catch (e) {
     console.log("[error getting Links] ", e);
   }
@@ -115,12 +117,6 @@ const getLinks = async url => {
 const db = admin.firestore();
 // Required for side-effects
 require("firebase/firestore");
-
-// show > episode > scene >
-// characters > scene
-// get all episodes with scenes
-
-// show > episode > script >
 
 // let docRef = db.collection("users").doc("alovelace");
 // let setAda = docRef.set({
