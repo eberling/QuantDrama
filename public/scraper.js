@@ -114,11 +114,11 @@ export const getLinks = async (url, season = 0) => {
 // module.exports.getEpisode = getEpisode;
 // module.exports.getLinks = getLinks;
 
-const test = () => {
-  getEpisode("http://www.chakoteya.net/DS9/548.htm").then(
-    x =>
-      // console.dir(x, { depth: null })
-      x
-  );
-};
+// const test = () => {
+//   getEpisode("http://www.chakoteya.net/DS9/548.htm").then(
+//     x =>
+//       // console.dir(x, { depth: null })
+//       x
+//   );
+// };
 // test();
