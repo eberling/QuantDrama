@@ -1,53 +1,54 @@
-const site = "http://www.chakoteya.net/DS9/";
-const axios = require("axios");
-const cheerio = require("cheerio");
-const scraper = require("./scraper");
-const episode = scraper.Episode;
+import "dotenv/config";
+import * as scraper from "./scraper";
 var admin = require("firebase-admin");
-var serviceAccount = require("../quantdrama-firebase-adminsdk.json");
-
+import config from "./../quantdrama-firebase-adminsdk.json";
+// import * as admin from "firebase-admin";
+// import { firestore } from 'firebase';
+// require("firebase/firestore");
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(config),
   databaseURL: "https://quantdrama.firebaseio.com"
 });
-
 const db = admin.firestore();
-require("firebase/firestore");
+
+const site = "http://www.chakoteya.net/DS9/";
 
 const main = async () => {
-  const numbersOfSeasons = [...Array(7).keys()].map(x => x + 1);
+  const numbersOfSeasons = [...Array(1).keys()].map(x => x + 1);
   const seasonUrls = await Promise.all(
     numbersOfSeasons.map(count => {
       return scraper.getLinks(site, count);
     })
   );
   try {
-    seasonUrls.map(season => {
-      season.map((links, i) => {
+    // console.log("wtf", seasonUrls);
+    seasonUrls.map(seasonUrl => {
+      seasonUrl.map((links, i) => {
         scraper
           .getEpisode(site + links.url)
           .then(ep => {
-            let sceneArr = [];
-            ep.epScenes.map((epScene, j) => {
-              sceneArr.push({
-                title: epScene.scTitle,
-                chars: epScene.scChars,
-                sceneNum: j
+            let scenes = [];
+            ep.scenes.map((scene, j) => {
+              scenes.push({
+                title: scene.title,
+                chars: scene.chars,
+                sceneNum: j + 1
               });
             });
-            object = {
-              title: ep.epTitle,
-              chars: ep.epChars,
-              scenes: sceneArr,
+            const object = {
+              title: ep.title,
+              chars: ep.chars,
+              scenes: scenes,
               season: links.season,
-              episodeNum: i
+              episodeNum: i + 1
             };
-            const docRef = db
-              .collection(`season_${links.season}`)
-              .doc()
-              .create(object);
+            console.dir(object, { depth: null });
+            // const docRef = db
+            //   .collection(`season_${links.season}`)
+            //   .doc()
+            //   .create(object);
           })
-          .catch(e => console.log("error loading in DB", ep, e));
+          .catch(e => console.log("error loading in DB", e));
       });
     });
   } catch (e) {

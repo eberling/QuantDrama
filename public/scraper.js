@@ -3,22 +3,17 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 var serviceAccount = require("../quantdrama-firebase-adminsdk.json");
 
-class Episode {
-  epTitle;
-  epChars;
-  epScenes;
-  constructor(epTitle, epChars, epScenes) {
-    this.epTitle = epTitle;
-    this.epChars = epChars;
-    this.epScenes = epScenes;
+export class Episode {
+  constructor(title, chars, scenes) {
+    this.title = title;
+    this.chars = chars;
+    this.scenes = scenes;
   }
 }
-class EpScene {
-  scTitle;
-  scChars;
-  constructor(scTitle, scChars) {
-    this.scTitle = scTitle;
-    this.scChars = scChars;
+export class Scene {
+  constructor(title, chars, density) {
+    this.title = title;
+    this.chars = chars;
   }
 }
 
@@ -33,33 +28,39 @@ class EpScene {
 //   console.dir(episodes, { depth: null });
 // }
 
-const getSeason = async url => {};
-
-const getEpisode = async url => {
+export const getEpisode = async url => {
   const episode = new Episode();
   try {
     const html = await axios.get(url);
     const $ = cheerio.load(html.data);
-    episode.epTitle = $("body>p>font>b")
+    const transcript = $("div font")
       .text()
       .replace("\n", " ");
-    const transcript = $("div font");
-    const episodeCharacters = getChars(transcript.text());
-    episode.epChars = episodeCharacters;
-    const dialogAndScenes = transcript.text().split(/(\[(?:(?!\[).)+\])(?!:)/g);
-    dialogAndScenes.forEach((element, i) => {
-      const isScene = element.match(/^(\[.*\])$/g);
-      if (isScene) {
-        if (!episode.epScenes) {
-          episode.epScenes = new Array();
+    episode.title = $("body>p>font>b")
+      .text()
+      .replace("\n", " ");
+    episode.chars = getChars(transcript);
+    // console.log(transcript);
+    const dialogAndScenes = transcript.split(/(\[(?:(?!\[).)+\])(?!:)/g);
+    // console.log(dialogAndScenes);
+    dialogAndScenes.forEach((dialogOrScene, i) => {
+      const elementIsScene = dialogOrScene.match(/^(\[.*\])$/g);
+      if (elementIsScene) {
+        if (!episode.scenes) {
+          episode.scenes = new Array(); // new Episode
         }
-        episode.epScenes.push(new EpScene(element));
-      } else if (episode.epScenes) {
-        episode.epScenes.slice(-1)[0].scChars = getChars(element);
+        episode.scenes.push(new Scene(dialogOrScene)); // new Scene
+      } else if (episode.scenes) {
+        const lastAddedScene = episode.scenes.slice(-1)[0];
+        lastAddedScene.chars = getChars(dialogOrScene);
+        // lastAddedScene.density =
+        //   lastAddedScene.chars.length / episode.chars.length;
       } else {
+        // no Scenes, must be intro
         // console.log(element, "discarded");
       }
     });
+    console.log("return ", episode);
     return episode;
   } catch (e) {
     console.log("[error building episode object:] ", e, url);
@@ -82,7 +83,7 @@ const getChars = text => {
   return uniqueChars;
 };
 
-const getLinks = async (url, season = 0) => {
+export const getLinks = async (url, season = 0) => {
   try {
     const html = await axios.get(url + "episodes.htm");
     const $ = cheerio.load(html.data);
@@ -94,21 +95,30 @@ const getLinks = async (url, season = 0) => {
       return links;
     } else {
       console.log("getting season: ", season);
-      seasonUrls = $(`table tr:nth-child(${season * 2 + 1}) table a[href]`)
+      const seasonUrls = $(
+        `table tr:nth-child(${season * 2 + 1}) table a[href]`
+      )
         .map((i, e) => $(e).attr("href"))
         .get();
-      const boi = seasonUrls.map(url => {
-        return { season: season, url: url };
-      });
-      return boi;
+      // console.log("seesy", seasonUrls);
+      return seasonUrls.map(url => ({ season: season, url: url }));
     }
   } catch (e) {
     console.log("[error getting Links] ", e);
   }
 };
 
-//main();
-module.exports.Episode = Episode;
-module.exports.EpScene = EpScene;
-module.exports.getEpisode = getEpisode;
-module.exports.getLinks = getLinks;
+// main();
+// module.exports.Episode = Episode;
+// module.exports.EpScene = EpScene;
+// module.exports.getEpisode = getEpisode;
+// module.exports.getLinks = getLinks;
+
+const test = () => {
+  getEpisode("http://www.chakoteya.net/DS9/548.htm").then(
+    x =>
+      // console.dir(x, { depth: null })
+      x
+  );
+};
+// test();
