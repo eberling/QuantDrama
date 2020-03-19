@@ -15,11 +15,13 @@
   },
   "devDependencies": {
     "@babel/core": "^7.8.7",
-    "@babel/node": "^7.8.7"
+    "@babel/node": "^7.8.7",
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel public/scraper.js"
+    "start": "babel public/scraper.js",
+    "test2": "ts-node functions.js"
   },
   "repository": {
     "type": "git",

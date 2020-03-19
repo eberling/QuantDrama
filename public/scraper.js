@@ -3,20 +3,6 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 var serviceAccount = require("../quantdrama-firebase-adminsdk.json");
 
-export class Episode {
-  constructor(title, chars, scenes) {
-    this.title = title;
-    this.chars = chars;
-    this.scenes = scenes;
-  }
-}
-export class Scene {
-  constructor(title, chars, density) {
-    this.title = title;
-    this.chars = chars;
-  }
-}
-
 // episodes[Episode] => Episode{ title, characters[string] , scenes[Scene]} => Scene { title characters[string] }
 // async function main() {
 //   const seasonUrls = await getLinks(site + "episodes.htm", 1);
