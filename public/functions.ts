@@ -3,106 +3,119 @@
 //  })
 
 //Chars can be specified , e.g. top 10 chars
-import { Season, Episode, Scene, Char, EpisodeChar } from "./interface-show";
+import { Scene, Char, EpisodeChar } from "./interface-show";
 
-function filterIrrelevantCharsFromScene(filter: Char[], scene: Scene): Scene {
+function filterCharsFromScene(filter: Char[], scene: Scene): Scene {
   let sceneCpy = { ...scene };
   console.dir(sceneCpy, { depth: null });
   sceneCpy.chars = sceneCpy.chars.filter(char => filter.includes(char));
   return sceneCpy;
 }
 
-const filterCharsFromEpisode = (filter, scenes) => {
+function filterCharsFromEpisode(filter: Char[], scenes: Scene[]): Scene[] {
   return scenes.map(scene => filterCharsFromScene(filter, scene));
-};
+}
 
 const getCharacterSignature = (char, scenes) => {
   scenes.map();
 };
 
-//receives already filtered Scene
-const calculateSceneDensity = (chars, scene) => {
+function calculateSceneDensity(chars: Char[], scene: Scene): number {
   return scene.chars.length / chars.length;
-};
-const calculateEpisodeDensity = (chars, scenes) => {
-  // episode density is average of all scene densities
-  return (
-    scenes.reduce(total, scene => total + calculateSceneDensity(chars, scene)) /
-    scenes.length
-  );
-};
+}
 
-const calculateEpisodeConcomitance = (chars, scenes) => {
-  const charsWithSignature = chars.map(char => {
+function calculateEpisodeDensity(chars: Char[], scenes: Scene[]): number {
+  // episode density is average of all scene densities
+  let avgDensity = 0;
+  scenes.forEach(scene => {
+    avgDensity += calculateSceneDensity(chars, scene);
+  });
+  return avgDensity / scenes.length;
+}
+
+function calculateEpisodeConcomitance(
+  chars: Char[],
+  scenes: Scene[]
+): {
+  concomitant: EpisodeChar[];
+}[] {
+  const episodeChars: EpisodeChar[] = chars.map(char => {
     return {
-      char,
+      name: char.name,
       scenes: scenes.map(scene => {
-        scene.chars.includes(char) ? scene.title : null;
+        if (scene.chars.includes(char)) {
+          return scene;
+        }
       })
     };
   });
-  return (concomitantPairs = findIdenticalCharSignature(charsWithSignature));
-};
+  return findIdenticalCharSignature(episodeChars);
+}
 
-const findIdenticalCharSignature = charsWithSignature => {
-  if (charsWithSignature.length < 2) {
+function findIdenticalCharSignature(
+  episodeChars: EpisodeChar[]
+): {
+  concomitant: EpisodeChar[];
+}[] {
+  if (episodeChars.length < 2) {
     return [];
   }
-  const firstChar = charsWithSignature[0];
-  const restChars = charsWithSignature.slice(1);
+  const firstChar = episodeChars[0];
+  const restChars = episodeChars.slice(1);
   const concomitantPairs = restChars.map(char => {
     if (JSON.stringify(firstChar.scenes) == JSON.stringify(char.scenes)) {
-      return firstChar;
+      return { concomitant: [firstChar, char] };
     }
   });
   return concomitantPairs.concat(findIdenticalCharSignature(restChars));
-};
+}
 
-const calculateEpisodeDominance = scenes => {
+function calculateEpisodeDominance(scenes: Scene[]): any {
   const chars = getCharsWithSignatureFromEpisode(scenes);
-  const chars = chars.map(char => {
-    return {
-      char: scenes.map(scene => {
-        scene.chars.includes(char) ? scene.title : null;
-      })
-    };
-  });
-};
-
+  return findDominantPairs(chars);
+}
 // returns [{char, ['SceneA', 'SceneB']],[char, ['SceneA', 'SceneB']],[char, ['SceneA', 'SceneB']]]
-const getCharsWithSignatureFromEpisode = scenes => {
-  const scenesOnlyWithChars = scenes.map(scene => scene.chars);
-  const charsWithSignature = scenesOnlyWithChars.map(char => {
-    return {
-      char,
+function getCharsWithSignatureFromEpisode(
+  chars: Char[],
+  scenes: Scene[]
+): EpisodeChar[] {
+  return chars.map(char => {
+    const epChar: EpisodeChar = {
+      name: char.name,
       scenes: scenes.map(scene => {
-        scene.chars.includes(char) ? scene.title : null;
+        if (scene.chars.some(ch => ch.name === char.name)) {
+          return scene;
+        }
       })
     };
+    return epChar;
   });
-  return charsWithSignature;
-};
+}
 
-const findDominantPairs = chars => {
+function findDominantPairs(chars: EpisodeChar[]): EpisodeChar[][] {
   const pairs = pair(chars);
   const dominations = pairs.map(pair => {
-    if (pair[0].length === pair[1].length) {
+    const a = pair[0].scenes;
+    const b = pair[1].scenes;
+    if (a.length === b.length) {
       return;
-    } else if (pair[0].length > pair[1].length) {
-      if (pair[1].every(val => pair[0].includes(val))) {
-        console.log(pair[1].char + " dominated by" + pair[0].char);
+    } else if (a.length > b.length) {
+      if (b.every(bscene => a.some(ascene => ascene.title === bscene.title))) {
+        console.log(pair[1].name + " dominated by" + pair[0].name);
         return [pair[0], pair[1]];
       }
     } else {
-      if (pair[0].every(val => pair[1].includes(val))) {
-        console.log(pair[0].char + " dominated by" + pair[1].char);
+      if (a.every(ascene => b.some(bscene => ascene.title === bscene.title))) {
+        console.log(pair[0].name + " dominated by" + pair[1].name);
         return [pair[1], pair[0]];
       }
     }
   });
-};
+  return dominations;
+}
 
-const pair = chars => {
+// used for density
+function pair(chars: EpisodeChar[]): EpisodeChar[][] {
   if (chars.length < 2) {
     return [];
   }
@@ -111,8 +124,8 @@ const pair = chars => {
   const pairs = rest.map(function(x) {
     return [first, x];
   });
-  return pairs.concat(pairwise(rest));
-};
+  return pairs.concat(pair(rest));
+}
 
 const calculateIndependence = (chars, episode) => {};
 
