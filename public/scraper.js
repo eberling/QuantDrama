@@ -15,8 +15,14 @@ var serviceAccount = require("../quantdrama-firebase-adminsdk.json");
 // }
 
 export const getEpisode = async url => {
-  const episode = new Episode();
   try {
+    let episode = {
+      title: null,
+      episodeNum: null,
+      season: null,
+      chars: null,
+      scenes: null
+    };
     const html = await axios.get(url);
     const $ = cheerio.load(html.data);
     const transcript = $("div font")
@@ -93,12 +99,6 @@ export const getLinks = async (url, season = 0) => {
     console.log("[error getting Links] ", e);
   }
 };
-
-// main();
-// module.exports.Episode = Episode;
-// module.exports.EpScene = EpScene;
-// module.exports.getEpisode = getEpisode;
-// module.exports.getLinks = getLinks;
 
 // const test = () => {
 //   getEpisode("http://www.chakoteya.net/DS9/548.htm").then(

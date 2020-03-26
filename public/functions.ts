@@ -1,8 +1,3 @@
-// matrix : episode.scenes.map(scene => {
-//    scene.chars.map(char =>)
-//  })
-
-//Chars can be specified , e.g. top 10 chars
 import { Scene, Char, EpisodeChar } from "./interface-show";
 
 function filterCharsFromScene(filter: Char[], scene: Scene): Scene {
@@ -16,9 +11,27 @@ function filterCharsFromEpisode(filter: Char[], scenes: Scene[]): Scene[] {
   return scenes.map(scene => filterCharsFromScene(filter, scene));
 }
 
-const getCharacterSignature = (char, scenes) => {
-  scenes.map();
-};
+function pair(chars: EpisodeChar[]): EpisodeChar[][] {
+  if (chars.length < 2) {
+    return [];
+  }
+  const first = chars[0];
+  const rest = chars.slice(1);
+  const pairs = rest.map(function(x) {
+    return [first, x];
+  });
+  return pairs.concat(pair(rest));
+}
+
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
 
 function calculateSceneDensity(chars: Char[], scene: Scene): number {
   return scene.chars.length / chars.length;
@@ -36,27 +49,14 @@ function calculateEpisodeDensity(chars: Char[], scenes: Scene[]): number {
 function calculateEpisodeConcomitance(
   chars: Char[],
   scenes: Scene[]
-): {
-  concomitant: EpisodeChar[];
-}[] {
-  const episodeChars: EpisodeChar[] = chars.map(char => {
-    return {
-      name: char.name,
-      scenes: scenes.map(scene => {
-        if (scene.chars.includes(char)) {
-          return scene;
-        }
-      })
-    };
-  });
+): EpisodeChar[][] {
+  const episodeChars = getCharacterSignatures(chars, scenes);
   return findIdenticalCharSignature(episodeChars);
 }
 
 function findIdenticalCharSignature(
   episodeChars: EpisodeChar[]
-): {
-  concomitant: EpisodeChar[];
-}[] {
+): EpisodeChar[][] {
   if (episodeChars.length < 2) {
     return [];
   }
@@ -64,36 +64,18 @@ function findIdenticalCharSignature(
   const restChars = episodeChars.slice(1);
   const concomitantPairs = restChars.map(char => {
     if (JSON.stringify(firstChar.scenes) == JSON.stringify(char.scenes)) {
-      return { concomitant: [firstChar, char] };
+      return [firstChar, char];
     }
   });
   return concomitantPairs.concat(findIdenticalCharSignature(restChars));
 }
 
-function calculateEpisodeDominance(scenes: Scene[]): any {
-  const chars = getCharsWithSignatureFromEpisode(scenes);
-  return findDominantPairs(chars);
-}
-// returns [{char, ['SceneA', 'SceneB']],[char, ['SceneA', 'SceneB']],[char, ['SceneA', 'SceneB']]]
-function getCharsWithSignatureFromEpisode(
+function calculateEpisodeDominance(
   chars: Char[],
   scenes: Scene[]
-): EpisodeChar[] {
-  return chars.map(char => {
-    const epChar: EpisodeChar = {
-      name: char.name,
-      scenes: scenes.map(scene => {
-        if (scene.chars.some(ch => ch.name === char.name)) {
-          return scene;
-        }
-      })
-    };
-    return epChar;
-  });
-}
-
-function findDominantPairs(chars: EpisodeChar[]): EpisodeChar[][] {
-  const pairs = pair(chars);
+): EpisodeChar[][] {
+  const epChars = getCharacterSignatures(chars, scenes);
+  const pairs = pair(epChars);
   const dominations = pairs.map(pair => {
     const a = pair[0].scenes;
     const b = pair[1].scenes;
@@ -114,23 +96,72 @@ function findDominantPairs(chars: EpisodeChar[]): EpisodeChar[][] {
   return dominations;
 }
 
-// used for density
-function pair(chars: EpisodeChar[]): EpisodeChar[][] {
-  if (chars.length < 2) {
-    return [];
-  }
-  const first = chars[0];
-  const rest = chars.slice(1);
-  const pairs = rest.map(function(x) {
-    return [first, x];
+function getCharacterSignatures(chars: Char[], scenes: Scene[]): EpisodeChar[] {
+  return chars.map(char => {
+    const epChar: EpisodeChar = {
+      name: char.name,
+      scenes: scenes.map(scene => {
+        if (scene.chars.some(ch => ch.name === char.name)) {
+          return scene;
+        }
+      })
+    };
+    return epChar;
   });
-  return pairs.concat(pair(rest));
 }
 
-const calculateIndependence = (chars, episode) => {};
+// weder konkomitant, noch alternativ
+function calculateIndependence(chars: Char[], scenes: Scene[]) {
+  const domPairs = calculateEpisodeDominance(chars, scenes);
+  const conPairs = calculateEpisodeAlternativity(chars, scenes);
+  const pairs = pair(getCharacterSignatures(chars, scenes));
+  const x = pairs.map(pair => {
+    if (
+      domPairs.some(domPair => {
+        arraysEqual(domPair, pair);
+      })
+    ) {
+      return;
+    } else if (
+      conPairs.some(conPair => {
+        arraysEqual(conPair, pair);
+      })
+    ) {
+      return;
+    } else {
+      return pair;
+    }
+  });
+  return x;
+}
 
-const calculateAlternative = (chars, episode) => {};
+const calculateEpisodeAlternativity = (
+  chars: Char[],
+  scenes: Scene[]
+): EpisodeChar[][] => {
+  const epChars = getCharacterSignatures(chars, scenes);
+  const pairs = pair(epChars);
+  const alternatePairs = pairs.map(pair => {
+    const a = pair[0].scenes;
+    const b = pair[1].scenes;
+    //true if no intersect
+    if (a.every(ae => !b.some(be => ae.title === be.title))) {
+      return pair;
+    }
+  });
+  return alternatePairs;
+};
 
-const calculateComplementary = (chars, episode) => {};
+// const calculateComplementary = (chars, episode) => {};
 
 const calculateScenicDistance = (chars, episode) => {};
+
+export {
+  calculateEpisodeAlternativity,
+  // calculateComplementary,
+  calculateEpisodeConcomitance,
+  calculateEpisodeDensity,
+  calculateIndependence,
+  calculateSceneDensity,
+  filterCharsFromEpisode
+};
