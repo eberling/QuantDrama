@@ -1,0 +1,30 @@
+<div class="App">
+  <div class="App--header">
+    <h2>Deep Space 9 - Character Dynamics</h2>
+  </div>
+  <div class="App--data">
+    <div>
+      <label>Choose a Season:</label>
+      <select (change)="onSeasonSelect($event.target.value)">
+        <option *ngFor="let number of seasons; index as i" value="i+1">
+          Season {{ i + 1 }}
+        </option>
+      </select>
+      <label>Choose an Episode:</label>
+      <select>
+        <option
+          *ngFor="let episode of episodes$ | async"
+          value="episode.episodeNum + 1"
+        >
+          Episode {{ episode.episodeNum }}
+        </option>
+      </select>
+      <label>Choose Characters:</label>
+      <input type="checkbox" />
+      <button (click)="add()">Draw</button>
+      <div class="App--graph">
+        <app-graph></app-graph>
+      </div>
+    </div>
+  </div>
+</div>
