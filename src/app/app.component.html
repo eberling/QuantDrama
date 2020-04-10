@@ -7,23 +7,46 @@
       <label>Choose a Season:</label>
       <select (change)="onSeasonSelect($event.target.value)">
         <option value="---">---</option>
-        <option *ngFor="let number of seasons; index as i" value="i+1">
+        <option *ngFor="let number of seasons; index as i" [value]="i + 1">
           Season {{ i + 1 }}
         </option>
       </select>
       <label>Choose an Episode:</label>
-      <select>
+      <select
+        [ngModel]="dataService.season$ | async"
+        (ngModelChange)="onEpisodeSelect($event)"
+      >
         <option value="---">---</option>
         <option
           *ngFor="let episode of dataService.season$ | async"
-          value="episode.episodeNum + 1"
+          [ngValue]="episode"
         >
-          Episode {{ episode.episodeNum }}
+          {{ episode.episodeNum }}: {{ episode.title }}
         </option>
       </select>
       <label>Choose Characters:</label>
-      <input type="checkbox" />
-      <button (click)="add()">Draw</button>
+      <form
+        [formGroup]="charForm"
+        (ngModelChange)="selectedChars$.next($event.target.value)"
+      >
+        <label
+          formArrayName="chars"
+          *ngFor="let char of dataService.chars$ | async; let i = index"
+          ><input type="checkbox" [formControlName]="i" /> {{ char }}
+        </label>
+      </form>
+
+      <label>Choose Relationships: </label>
+      <ng-container
+        *ngFor="let relationship of analysisService.relationships | keyvalue"
+      >
+        <label
+          >{{ relationship.key }}
+          <input type="checkbox" />
+        </label>
+      </ng-container>
+
+      <button (click)="draw()">Draw</button>
       <div class="App--graph">
         <app-graph></app-graph>
       </div>

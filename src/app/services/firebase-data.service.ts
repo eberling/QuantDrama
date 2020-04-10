@@ -1,10 +1,8 @@
 import { Injectable } from "@angular/core";
-import { AngularFirestore, DocumentData } from "@angular/fire/firestore";
 import { calculateEpisodeIndependence } from "src/analysis/analysis";
 import { Observable, Subject, of } from "rxjs";
 import { Episode, Char } from "src/analysis/interface-show";
-import { AngularFireModule } from "@angular/fire";
-import { fbConfig } from "./../../firebase/firebase-config.js";
+import { AngularFirestore, DocumentData } from "angularfire2/firestore";
 
 @Injectable({
   providedIn: "root",
@@ -12,16 +10,21 @@ import { fbConfig } from "./../../firebase/firebase-config.js";
 export class FirebaseDataService {
   graphData$: Subject<any>;
   seasons$: Observable<number>;
-  season$: Subject<Episode[] | DocumentData[]>;
-  chars$: Subject<Char[]>;
-  episode$: Subject<Episode | DocumentData>;
+  season$: Subject<Episode[] | DocumentData[]> = new Subject();
+  chars$: Subject<String[]> = new Subject();
+  episode$: Subject<Episode> = new Subject();
+  selectedChars$: Subject<String> = new Subject();
 
   constructor(private db: AngularFirestore) {
-    console.log(AngularFireModule.initializeApp(fbConfig));
-    console.log(fbConfig);
-    AngularFireModule.initializeApp(fbConfig);
     this.seasons$ = of(7);
-    console.log(this.db.collection("season_1").get());
+    // console.log(
+    //   this.db
+    //     .collection("season_1")
+    //     .get()
+    //     .subscribe((what) => console.log(what.docs))
+    // );
+
+    this.episode$.subscribe((episode) => this.chars$.next(episode.chars));
   }
 
   setGraph(season, episode = null, chars) {}
@@ -54,30 +57,46 @@ export class FirebaseDataService {
     return this.db.collection("season_1").get();
   }
 
-  getEpisode(season: number, episodeNum: number) {
-    this.season$.subscribe((episodes) => {
-      let ep;
-      episodes.forEach((e) => {
-        if (e.episodeNum === episodeNum) {
-          ep = e;
-        }
-      });
-      // const e = episodes.find((episode: Episode) => episode.episodeNum === episodeNum); thank you typescript
-      this.episode$.next(ep);
-    }); // +1 ?
+  getEpisode(episodeNum: number) {
+    // this.season$.subscribe((episodes) => {
+    //   let ep;
+    //   episodes.forEach((e) => {
+    //     if (e.episodeNum === episodeNum) {
+    //       ep = e;
+    //     }
+    //   });
+    //   // const e = episodes.find((episode: Episode) => episode.episodeNum === episodeNum); thank you typescript
+    //   this.episode$.next(ep);
+    // }); // +1 ?
   }
 
   getAllChars() {
     return this.db.collection("season_1").get();
   }
 
-  getSeason(season: number) {
+  setEpisode(episode: Episode) {
+    // console.log(Object.keys(event));
+    this.episode$.next(episode);
+  }
+
+  setSeason(season: number) {
+    // console.log(`season_${season}`);
     this.db
       .collection(`season_${season}`)
       .get()
       .subscribe((snapshot) => {
-        console.log("FirebaseDataService -> getSeason -> snapshot", snapshot);
-        this.season$.next(snapshot.docs.map((doc) => doc.data()));
+        // console.log(
+        //   "FirebaseDataService -> getSeason -> snapshot",
+        // snapshot.docs;
+        // );
+        this.season$.next(
+          snapshot.docs
+            .map((doc) => {
+              // console.log(doc.data());
+              return doc.data();
+            })
+            .sort((a, b) => a.episodeNum - b.episodeNum)
+        );
       });
   }
 }

@@ -2,7 +2,7 @@ interface Episode {
   title: string;
   episodeNum: number;
   season: number;
-  chars: Char[];
+  chars: String[];
   scenes: Scene[];
 }
 
