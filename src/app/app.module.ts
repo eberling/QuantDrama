@@ -1,7 +1,4 @@
-import {
-  AngularFirestore,
-  AngularFirestoreModule,
-} from "@angular/fire/firestore";
+import { AngularFirestoreModule } from "@angular/fire/firestore";
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
@@ -11,7 +8,7 @@ import { NgxGraphModule } from "@swimlane/ngx-graph";
 import { AppGraphComponent } from "./components/graph/app-graph.component";
 import { AngularFireModule } from "@angular/fire";
 import { fbConfig } from "../firebase/firebase-config.js";
-
+import { AngularFireAuthModule } from "@angular/fire/auth";
 @NgModule({
   imports: [
     BrowserModule,
@@ -20,7 +17,8 @@ import { fbConfig } from "../firebase/firebase-config.js";
     ReactiveFormsModule,
     NgxGraphModule,
     AngularFireModule.initializeApp(fbConfig),
-    AngularFirestoreModule,
+    AngularFirestoreModule, // firestore
+    AngularFireAuthModule, // auth
   ],
   declarations: [AppComponent, AppGraphComponent],
   bootstrap: [AppComponent],

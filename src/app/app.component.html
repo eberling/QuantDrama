@@ -6,14 +6,16 @@
     <div>
       <label>Choose a Season:</label>
       <select (change)="onSeasonSelect($event.target.value)">
+        <option value="---">---</option>
         <option *ngFor="let number of seasons; index as i" value="i+1">
           Season {{ i + 1 }}
         </option>
       </select>
       <label>Choose an Episode:</label>
       <select>
+        <option value="---">---</option>
         <option
-          *ngFor="let episode of episodes$ | async"
+          *ngFor="let episode of dataService.season$ | async"
           value="episode.episodeNum + 1"
         >
           Episode {{ episode.episodeNum }}
