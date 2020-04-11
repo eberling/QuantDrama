@@ -25,30 +25,67 @@
         </option>
       </select>
       <label>Choose Characters:</label>
-      <form
-        [formGroup]="charForm"
-        (ngModelChange)="selectedChars$.next($event.target.value)"
-      >
+      <form [formGroup]="form">
         <label
-          formArrayName="chars"
-          *ngFor="let char of dataService.chars$ | async; let i = index"
-          ><input type="checkbox" [formControlName]="i" /> {{ char }}
+          formGroupName="chars"
+          *ngFor="let char of form.get('chars').value | keyvalue"
+          ><input
+            type="checkbox"
+            [formControlName]="char.key"
+            [value]="char.value"
+          />
+          {{ char.key }}
+        </label>
+
+        <label>Choose Relationships: </label>
+        <label
+          formGroupName="dynamics"
+          *ngFor="let dynamics of form.get('dynamics').value | keyvalue"
+        >
+          {{ dynamics.key }}
+          <input
+            type="checkbox"
+            [formControlName]="dynamics.key"
+            [value]="dynamics.value"
+          />
         </label>
       </form>
-
-      <label>Choose Relationships: </label>
-      <ng-container
-        *ngFor="let relationship of analysisService.relationships | keyvalue"
-      >
-        <label
-          >{{ relationship.key }}
-          <input type="checkbox" />
-        </label>
-      </ng-container>
-
       <button (click)="draw()">Draw</button>
       <div class="App--graph">
-        <app-graph></app-graph>
+        <!-- <app-graph></app-graph> -->
+        <ngx-graph
+          class="chart-container"
+          [view]="[500, 200]"
+          [links]="[
+            {
+              id: 'a',
+              source: 'first',
+              target: 'second',
+              label: 'is parent of'
+            },
+            {
+              id: 'b',
+              source: 'first',
+              target: 'third',
+              label: 'custom label'
+            }
+          ]"
+          [nodes]="[
+            {
+              id: 'first',
+              label: 'A'
+            },
+            {
+              id: 'second',
+              label: 'B'
+            },
+            {
+              id: 'third',
+              label: 'C'
+            }
+          ]"
+        >
+        </ngx-graph>
       </div>
     </div>
   </div>

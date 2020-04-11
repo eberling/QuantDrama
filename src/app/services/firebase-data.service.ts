@@ -8,22 +8,16 @@ import { AngularFirestore, DocumentData } from "angularfire2/firestore";
   providedIn: "root",
 })
 export class FirebaseDataService {
-  graphData$: Subject<any>;
+  episode$: Subject<Episode> = new Subject();
   seasons$: Observable<number>;
   season$: Subject<Episode[] | DocumentData[]> = new Subject();
   chars$: Subject<String[]> = new Subject();
-  episode$: Subject<Episode> = new Subject();
-  selectedChars$: Subject<String> = new Subject();
+  selectedChars$: Subject<any> = new Subject();
+  selectedDynamics$: Subject<any> = new Subject();
+  graphData$: Subject<any>;
 
   constructor(private db: AngularFirestore) {
     this.seasons$ = of(7);
-    // console.log(
-    //   this.db
-    //     .collection("season_1")
-    //     .get()
-    //     .subscribe((what) => console.log(what.docs))
-    // );
-
     this.episode$.subscribe((episode) => this.chars$.next(episode.chars));
   }
 
@@ -77,6 +71,11 @@ export class FirebaseDataService {
   setEpisode(episode: Episode) {
     // console.log(Object.keys(event));
     this.episode$.next(episode);
+  }
+
+  setSelectedChars(chars) {
+    console.log(chars);
+    this.selectedChars$.next(chars);
   }
 
   setSeason(season: number) {
