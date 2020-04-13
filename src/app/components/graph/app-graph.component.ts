@@ -1,4 +1,6 @@
-import { Component, OnInit } from "@angular/core";
+import { AnalysisService } from "./../../services/analysis.service";
+import { FirebaseDataService } from "./../../services/firebase-data.service";
+import { Component, OnInit, Output } from "@angular/core";
 import * as shape from "d3-shape";
 import { Edge, Node, ClusterNode, Layout } from "@swimlane/ngx-graph";
 import { nodes, clusters, links } from "./../../data";
@@ -10,9 +12,17 @@ import { Subject } from "rxjs";
   styleUrls: ["./app-graph.component.scss"],
 })
 export class AppGraphComponent implements OnInit {
-  constructor() {}
-
-  name = "NGX-Graph Demo";
+  constructor(
+    private dataService: FirebaseDataService,
+    private analysisService: AnalysisService
+  ) {
+    analysisService.graphLinks$.subscribe((data) => {
+      console.log("watch me hit him right between the eye");
+    });
+    analysisService.graphNodes$.subscribe((data) => {
+      console.log("cornia");
+    });
+  }
 
   nodes: Node[] = nodes;
   clusters: ClusterNode[] = clusters;

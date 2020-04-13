@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { calculateEpisodeIndependence } from "src/analysis/analysis";
-import { Observable, Subject, of } from "rxjs";
+import { Observable, Subject, of, combineLatest } from "rxjs";
 import { Episode, Char } from "src/analysis/interface-show";
 import { AngularFirestore, DocumentData } from "angularfire2/firestore";
 
@@ -15,10 +15,18 @@ export class FirebaseDataService {
   selectedChars$: Subject<any> = new Subject();
   selectedDynamics$: Subject<any> = new Subject();
   graphData$: Subject<any>;
+  graphFormData$: Observable<any>;
 
   constructor(private db: AngularFirestore) {
     this.seasons$ = of(7);
     this.episode$.subscribe((episode) => this.chars$.next(episode.chars));
+
+    this.graphFormData$ = combineLatest(
+      this.selectedChars$,
+      this.selectedDynamics$,
+      this.episode$,
+      this.season$
+    );
   }
 
   setGraph(season, episode = null, chars) {}

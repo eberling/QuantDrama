@@ -1,10 +1,10 @@
-import { FormArray, FormControl, FormGroup } from "@angular/forms";
+import { AppGraphComponent } from "./components/graph/app-graph.component";
+import { FormControl, FormGroup } from "@angular/forms";
 import { FormBuilder } from "@angular/forms";
 import { AnalysisService } from "./services/analysis.service";
-import { Observable, Subject, combineLatest } from "rxjs";
 import { FirebaseDataService } from "./services/firebase-data.service";
-import { Component, OnInit } from "@angular/core";
-import { debounce, debounceTime, filter, map } from "rxjs/operators";
+import { Component, OnInit, ViewChild } from "@angular/core";
+import { debounceTime, map } from "rxjs/operators";
 
 @Component({
   selector: "app-root",
@@ -14,7 +14,6 @@ import { debounce, debounceTime, filter, map } from "rxjs/operators";
 export class AppComponent implements OnInit {
   seasons: Array<number>;
   form: FormGroup;
-
   constructor(
     private dataService: FirebaseDataService,
     private analysisService: AnalysisService,
@@ -30,13 +29,6 @@ export class AppComponent implements OnInit {
     this.initForms();
     console.log("t");
     this.onFormChanges();
-
-    combineLatest(
-      this.dataService.selectedChars$,
-      this.dataService.selectedDynamics$,
-      this.dataService.episode$,
-      this.dataService.season$
-    ).subscribe((x) => console.log(x));
   }
 
   initForms() {
@@ -99,6 +91,7 @@ export class AppComponent implements OnInit {
   }
 
   draw() {
-    this.analysisService.prepareGraphData(["concomitance", "dominance"]);
+    this.analysisService.prepareLinks();
+    this.analysisService.prepareNodes();
   }
 }

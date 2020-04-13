@@ -1,5 +1,5 @@
-import { Episode } from "src/analysis/interface-show";
-import { Subject } from "rxjs";
+import { map } from "rxjs/operators";
+import { Subject, Observable, combineLatest } from "rxjs";
 import { FirebaseDataService } from "./firebase-data.service";
 import { Injectable } from "@angular/core";
 import {
@@ -18,29 +18,82 @@ import {
 })
 export class AnalysisService {
   data$ = new Subject();
-
+  graphFormData$: Observable<any>;
+  graphData: any[];
   dynamicsArray = [
     { alternativity: calculateEpisodeAlternativity },
     { concomitance: calculateEpisodeConcomitance },
     { dominance: calculateEpisodeDominance },
     { independence: calculateEpisodeIndependence },
   ];
+  graphLinks$ = new Subject();
+  graphNodes$ = new Subject();
+  graphInput$: Observable<any>;
 
-  constructor(firebaseDataService: FirebaseDataService) {
+  constructor(private dataService: FirebaseDataService) {
     // firebaseDataService.selectedChars$.subscribe((x) => console.log(x));
     // firebaseDataService.episode$.subscribe();
+    this.dataService.graphFormData$.subscribe((x) => {
+      console.log(x);
+      this.graphData = x;
+    });
+
+    this.graphInput$ = combineLatest(this.graphLinks$, this.graphNodes$).pipe(
+      map(([links, nodes]) => {
+        return; /* TODO */
+      })
+    );
+  }
+  //   prepareGraphData(selectedDynamics: any[], chars: string[], episode: Episode) {
+
+  prepareLinks() {
+    const [chars, selectedDynamics, episode, season] = [...this.graphData];
+    // with passed function names retrieve callable functions from all functions object
+    const dynamicFunctions = selectedDynamics.map((dynamicName) => {
+      return this.dynamicsArray.find((dynObj) =>
+        Object.keys(dynObj).includes(dynamicName)
+      );
+    });
+    // call each selected function, generating edges
+    const links = dynamicFunctions.map((dynFunc) => {
+      const funcKey = Object.keys(dynFunc)[0];
+      const callableFunc: any = Object.values(dynFunc)[0];
+      const relationshipsData = callableFunc(chars, episode.scenes);
+      const links = relationshipsData.map((relationship) => {
+        console.log("rel", relationship);
+        const id =
+          relationship[0].name + "+" + relationship[1].name + "+" + funcKey;
+        const link = {
+          id: id,
+          source: relationship[0].name,
+          target: relationship[1].name,
+          label: funcKey,
+        };
+        return link;
+      });
+      console.log("obama", links);
+      return links;
+    });
+
+    this.graphLinks$.next(links);
+    //return links;
+    // {
+    //   id: 'a',
+    //   source: 'first',
+    // target: 'second',
+    //   label: 'is parent of'
+    // }
   }
 
-  prepareGraphData(selectedDynamics: any[], chars: string[], episode: Episode) {
-    const dynamicFunctions = selectedDynamics.map((dynamicName) => {
-      return this.dynamicsArray.find((dynObj) => {
-        return Object.keys(dynObj).includes(dynamicName);
-      });
+  prepareNodes() {
+    const chars = this.graphData[0];
+    const nodes = chars.map((char) => {
+      console.log(char);
+      const label = char.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+      return { id: char, label: label };
     });
-    console.log("f", dynamicFunctions);
-    dynamicFunctions.forEach((dynFunc) => {
-      // console.log(Object.values(dynFunc)[0]());
-    });
+    this.graphNodes$.next(nodes);
+    // return nodes;
   }
 
   // 0: (3) ["SISKO", "CREWMAN", "DEELA"]
