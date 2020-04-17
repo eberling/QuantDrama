@@ -1,4 +1,4 @@
-import { Scene, EpisodeChar } from "./interface-show";
+import { Scene, EpisodeChar, DynamicPair, Dynamic } from "./interface-show";
 
 function filterCharsFromScene(filter: string[], scene: Scene): Scene {
   const sceneCpy = { ...scene };
@@ -56,12 +56,20 @@ function calculateEpisodeDensity(chars: string[], scenes: Scene[]): number {
 function calculateEpisodeConcomitance(
   chars: string[],
   scenes: Scene[]
-): EpisodeChar[][] {
-  const episodeChars = getCharacterSignatures(chars, scenes);
-  return findIdenticalCharSignature(episodeChars);
+): DynamicPair[] {
+  const episodeChars: EpisodeChar[] = getCharacterSignatures(chars, scenes);
+  const concomitantPairs: EpisodeChar[][] = findIdenticalCharSignatures(
+    episodeChars
+  );
+  const concomitantDynamicPairs: DynamicPair[] = concomitantPairs.map(
+    (concomitantPair) => {
+      return { chars: concomitantPair, dynamicType: "concomitant" };
+    }
+  );
+  return concomitantDynamicPairs;
 }
 
-function findIdenticalCharSignature(
+function findIdenticalCharSignatures(
   episodeChars: EpisodeChar[]
 ): EpisodeChar[][] | any {
   if (episodeChars.length < 2) {
@@ -74,16 +82,16 @@ function findIdenticalCharSignature(
       return JSON.stringify(firstChar.scenes) === JSON.stringify(char.scenes);
     })
     .map((char) => [firstChar, char]);
-  return concomitantPairs.concat(findIdenticalCharSignature(restChars));
+  return concomitantPairs.concat(findIdenticalCharSignatures(restChars));
 }
 
 function calculateEpisodeDominance(
   chars: string[],
   scenes: Scene[]
-): EpisodeChar[][] {
+): DynamicPair[] {
   const epChars = getCharacterSignatures(chars, scenes);
   const pairs = pair(epChars);
-  const dominations: EpisodeChar[][] = [];
+  const dominations: DynamicPair[] = [];
   pairs.forEach((paired) => {
     const a = paired[0].scenes;
     const b = paired[1].scenes;
@@ -92,14 +100,20 @@ function calculateEpisodeDominance(
         b.every((bscene) => a.some((ascene) => ascene.title === bscene.title))
       ) {
         console.log(paired[1].name + " dominated by" + paired[0].name);
-        dominations.push([paired[0], paired[1]]);
+        dominations.push({
+          chars: [paired[0], paired[1]],
+          dynamicType: "dominated by",
+        });
       }
     } else if (b.length > a.length) {
       if (
         a.every((ascene) => b.some((bscene) => ascene.title === bscene.title))
       ) {
         console.log(paired[0].name + " dominated by" + paired[1].name);
-        dominations.push([paired[1], paired[0]]);
+        dominations.push({
+          chars: [paired[1], paired[0]],
+          dynamicType: "dominated by",
+        });
       }
     }
   });
@@ -127,36 +141,42 @@ function getCharacterSignatures(
 
 // weder konkomitant, noch alternativ
 function calculateEpisodeIndependence(chars: string[], scenes: Scene[]) {
-  console.log(chars);
   const domPairs = calculateEpisodeDominance(chars, scenes);
   console.log("dom", domPairs);
-  const conPairs = calculateEpisodeAlternativity(chars, scenes);
-  console.log("con", conPairs);
+  const altPairs = calculateEpisodeAlternativity(chars, scenes);
+  console.log("con", altPairs);
   const pairs = pair(getCharacterSignatures(chars, scenes));
   console.log("pairs", pairs);
-  const x = pairs.filter((paired) => {
+  const independentPairs = pairs.filter((paired) => {
     const hasDomPair = domPairs.some((domPair) => {
-      return arraysEqual(domPair, paired);
+      return arraysEqual(domPair.chars, paired);
     });
-    const hasConPair = conPairs.some((conPair) => {
-      return arraysEqual(conPair, paired);
+    const hasConPair = altPairs.some((altPair) => {
+      return arraysEqual(altPair.chars, paired);
     });
     return !hasDomPair || !hasConPair;
   });
-  return x;
+  const independentDynamicsPair = independentPairs.map((independentPair) => {
+    return { chars: independentPair, dynamicType: "independent" };
+  });
+  return independentDynamicsPair;
 }
 
 const calculateEpisodeAlternativity = (
   chars: string[],
   scenes: Scene[]
-): EpisodeChar[][] => {
+): DynamicPair[] => {
   const epChars = getCharacterSignatures(chars, scenes);
   const pairs = pair(epChars);
-  return pairs.filter((paired) => {
+  const alternatePairs = pairs.filter((paired) => {
     const a = paired[0].scenes;
     const b = paired[1].scenes;
     return a.every((ae) => !b.some((be) => ae.title === be.title));
   });
+  const alternatingDynamicsPair = alternatePairs.map((alternatePair) => {
+    return { chars: alternatePair, dynamicType: "alternative" };
+  });
+  return alternatingDynamicsPair;
 };
 
 // const calculateComplementary = (chars, episode) => {};

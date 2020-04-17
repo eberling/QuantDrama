@@ -32,79 +32,83 @@
   ]"
 >
 </ngx-graph> -->
-<ngx-graph
-  [links]="links"
-  [nodes]="nodes"
-  layout="d3ForceDirected"
-  [minZoomLevel]="minZoomLevel"
-  [maxZoomLevel]="maxZoomLevel"
-  autoZoom="true"
-  autoCenter="true"
-  [update$]="update$"
-  [center$]="center$"
-  [zoomToFit$]="zoomToFit$"
->
-  <ng-template #defsTemplate>
-    <svg:marker
-      id="arrow"
-      viewBox="0 -5 10 10"
-      refX="8"
-      refY="0"
-      markerWidth="4"
-      markerHeight="4"
-      orient="auto"
-    >
-      <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
-    </svg:marker>
-  </ng-template>
-
-  <ng-template #clusterTemplate let-cluster>
-    <svg:g class="node cluster">
-      <svg:rect
-        rx="15"
-        ry="5"
-        [attr.width]="cluster.dimension.width"
-        [attr.height]="cluster.dimension.height"
-        [attr.fill]="cluster.data.color"
-      />
-    </svg:g>
-  </ng-template>
-
-  <ng-template #nodeTemplate let-node>
-    <svg:g class="node">
-      <svg:rect
-        rx="5"
-        [attr.width]="node.dimension.width"
-        [attr.height]="node.dimension.height"
-        [attr.fill]="node.data.color"
-      />
-      <svg:text
-        alignment-baseline="central"
-        [attr.x]="10"
-        [attr.y]="node.dimension.height / 2"
+<div class="" *ngIf="links && nodes">
+  <ngx-graph
+    [draggingEnabled]="true"
+    [panningEnabled]="false"
+    [enableZoom]="false"
+    [links]="links"
+    [nodes]="nodes"
+    layout="colaForceDirected"
+    [minZoomLevel]="minZoomLevel"
+    [maxZoomLevel]="maxZoomLevel"
+    autoZoom="true"
+    autoCenter="true"
+    [update$]="update$"
+    [center$]="center$"
+    [zoomToFit$]="zoomToFit$"
+    [view]="[800, 600]"
+  >
+    <ng-template #defsTemplate>
+      <svg:marker
+        id="arrow"
+        viewBox="0 -5 10 10"
+        refX="8"
+        refY="0"
+        markerWidth="4"
+        markerHeight="4"
+        orient="auto"
       >
-        {{ node.label }}
-      </svg:text>
-    </svg:g>
-  </ng-template>
+        <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+      </svg:marker>
+    </ng-template>
 
-  <ng-template #linkTemplate let-link>
-    <svg:g class="edge">
-      <svg:path
-        class="line"
-        stroke-width="2"
-        marker-end="url(#arrow)"
-      ></svg:path>
-      <svg:text class="edge-label" text-anchor="middle">
-        <textPath
-          class="text-path"
-          [attr.href]="'#' + link.id"
-          [style.dominant-baseline]="link.dominantBaseline"
-          startOffset="50%"
+    <ng-template #nodeTemplate let-node>
+      <svg:g class="node">
+        <svg:rect
+          rx="5"
+          [attr.width]="node.dimension.width"
+          [attr.height]="node.dimension.height"
+          [attr.fill]="node.data.color"
+        />
+        <svg:text
+          alignment-baseline="central"
+          [attr.x]="10"
+          [attr.y]="node.dimension.height / 2"
         >
-          {{ link.label }}
-        </textPath>
-      </svg:text>
-    </svg:g>
-  </ng-template>
-</ngx-graph>
+          {{ node.label }}
+        </svg:text>
+      </svg:g>
+    </ng-template>
+
+    <ng-template #linkTemplate let-link>
+      <svg:g class="edge">
+        <svg:path
+          *ngIf="link.label === 'dominance'; else noMark"
+          class="line"
+          stroke-width="3"
+          marker-end="url(#arrow)"
+        ></svg:path>
+
+        <ng-template #noMark>
+          <svg:path
+            *ngIf="link.id !== 'dominance'"
+            class="line"
+            stroke-width="3"
+          ></svg:path>
+        </ng-template>
+
+        <svg:text class="edge-label" text-anchor="middle">
+          <textPath
+            class="text-path"
+            [attr.href]="'#' + link.id"
+            [style.dominant-baseline]="link.dominantBaseline"
+            startOffset="50%"
+          >
+            {{ link.label }}
+          </textPath>
+        </svg:text>
+      </svg:g>
+    </ng-template>
+  </ngx-graph>
+</div>

@@ -16,20 +16,24 @@ export class AppGraphComponent implements OnInit {
     private dataService: FirebaseDataService,
     private analysisService: AnalysisService
   ) {
-    analysisService.graphLinks$.subscribe((data) => {
-      console.log("watch me hit him right between the eye");
+    analysisService.graphLinks$.subscribe((links: any[]) => {
+      console.log("AppGraphComponent -> links", links);
+      this.links = links[0];
     });
-    analysisService.graphNodes$.subscribe((data) => {
-      console.log("cornia");
+    analysisService.graphNodes$.subscribe((nodes: any[]) => {
+      console.log("AppGraphComponent -> nodes", nodes);
+      this.nodes = nodes;
     });
   }
 
-  nodes: Node[] = nodes;
+  nodes: Node[];
+  // nodes$: Subject<any> = new Subject();
+
   clusters: ClusterNode[] = clusters;
 
-  links: Edge[] = links;
-
-  layout: String | Layout = "dagreCluster";
+  links: Edge[];
+  // links$: Subject<any> = new Subject();
+  layout: String | Layout = "colaForceDirected";
   layouts: any[] = [
     {
       label: "Dagre",
@@ -69,14 +73,14 @@ export class AppGraphComponent implements OnInit {
 
   draggingEnabled: boolean = true;
   panningEnabled: boolean = true;
-  zoomEnabled: boolean = true;
+  zoomEnabled: boolean = false;
 
   zoomSpeed: number = 0.1;
   minZoomLevel: number = 0.1;
-  maxZoomLevel: number = 4.0;
+  maxZoomLevel: number = 8.0;
   panOnZoom: boolean = true;
 
-  autoZoom: boolean = false;
+  autoZoom: boolean = true;
   autoCenter: boolean = false;
 
   update$: Subject<boolean> = new Subject();

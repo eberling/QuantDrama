@@ -1,3 +1,9 @@
+import {
+  Char,
+  Scene,
+  EpisodeChar,
+  DynamicPair,
+} from "src/analysis/interface-show";
 import { map } from "rxjs/operators";
 import { Subject, Observable, combineLatest } from "rxjs";
 import { FirebaseDataService } from "./firebase-data.service";
@@ -28,7 +34,7 @@ export class AnalysisService {
   ];
   graphLinks$ = new Subject();
   graphNodes$ = new Subject();
-  graphInput$: Observable<any>;
+  // graphInput$: Observable<any>;
 
   constructor(private dataService: FirebaseDataService) {
     // firebaseDataService.selectedChars$.subscribe((x) => console.log(x));
@@ -38,62 +44,204 @@ export class AnalysisService {
       this.graphData = x;
     });
 
-    this.graphInput$ = combineLatest(this.graphLinks$, this.graphNodes$).pipe(
-      map(([links, nodes]) => {
-        return; /* TODO */
-      })
-    );
+    // this.graphInput$ = combineLatest(this.graphLinks$, this.graphNodes$).pipe(
+    //   map(([links, nodes]) => {
+    //     return [links, nodes];
+    //     /* TODO */
+    //   })
+    // );
   }
   //   prepareGraphData(selectedDynamics: any[], chars: string[], episode: Episode) {
 
+  _getDynamicFunctions(
+    selectedDynamics
+  ): ((c: Char[], s: Scene[]) => DynamicPair[])[] {
+    return selectedDynamics.map((dynamicName) => {
+      const fnObjects = this.dynamicsArray.find((d) =>
+        Object.keys(d).includes(dynamicName)
+      );
+      return Object.values(fnObjects)[0];
+    });
+  }
+
+  _buildGraphLinks(dynamicsPairs: DynamicPair[]) {
+    return dynamicsPairs.map((dynamicPair) => {
+      console.log("rel", dynamicPair);
+      const id =
+        dynamicPair.chars[0].name +
+        "+" +
+        dynamicPair.chars[1].name +
+        "+" +
+        dynamicPair.dynamicType;
+      const graphLinkObject = {
+        // id: id,
+        source: dynamicPair.chars[0].name,
+        target: dynamicPair.chars[1].name,
+        label: dynamicPair.dynamicType,
+      };
+      return graphLinkObject;
+    });
+  }
+
   prepareLinks() {
+    if (!this.graphData) {
+      this.graphLinks$.next([
+        [
+          {
+            source: "QUARK",
+            target: "BATSMAN",
+            label: "alternative",
+            id: "aogl5",
+          },
+          {
+            source: "ALIEN",
+            target: "BASHIR",
+            label: "alternative",
+            id: "a5ele",
+          },
+          {
+            source: "SISKO",
+            target: "QUARK",
+            label: "dominance",
+          },
+          {
+            source: "ALIEN",
+            target: "BATSMAN",
+            label: "alternative",
+            id: "a9073",
+          },
+          {
+            source: "BASHIR",
+            target: "BATSMAN",
+            label: "alternative",
+            id: "a0vny",
+          },
+        ],
+        [],
+      ]);
+      return;
+    }
     const [chars, selectedDynamics, episode, season] = [...this.graphData];
     // with passed function names retrieve callable functions from all functions object
-    const dynamicFunctions = selectedDynamics.map((dynamicName) => {
-      return this.dynamicsArray.find((dynObj) =>
-        Object.keys(dynObj).includes(dynamicName)
-      );
-    });
+    const dynamicFunctions = this._getDynamicFunctions(selectedDynamics);
+    console.log(
+      "AnalysisService -> prepareLinks -> dynamicFunctions",
+      dynamicFunctions
+    );
     // call each selected function, generating edges
-    const links = dynamicFunctions.map((dynFunc) => {
-      const funcKey = Object.keys(dynFunc)[0];
-      const callableFunc: any = Object.values(dynFunc)[0];
-      const relationshipsData = callableFunc(chars, episode.scenes);
-      const links = relationshipsData.map((relationship) => {
-        console.log("rel", relationship);
-        const id =
-          relationship[0].name + "+" + relationship[1].name + "+" + funcKey;
-        const link = {
-          id: id,
-          source: relationship[0].name,
-          target: relationship[1].name,
-          label: funcKey,
-        };
-        return link;
-      });
-      console.log("obama", links);
-      return links;
-    });
 
-    this.graphLinks$.next(links);
-    //return links;
-    // {
-    //   id: 'a',
-    //   source: 'first',
-    // target: 'second',
-    //   label: 'is parent of'
-    // }
+    const graphLinks = dynamicFunctions.map((callableDynamicFn) => {
+      const dynamicsPairs = callableDynamicFn(chars, episode.scenes);
+      return this._buildGraphLinks(dynamicsPairs);
+      // { id: 'a', source: 'first', target: 'second', label: 'is parent of' }
+    });
+    console.log("graphlinks", graphLinks);
+    this.graphLinks$.next(graphLinks);
   }
 
   prepareNodes() {
+    if (!this.graphData) {
+      this.graphNodes$.next([
+        {
+          id: "SISKO",
+          label: "Sisko",
+          meta: {
+            forceDimensions: false,
+          },
+          dimension: {
+            width: 50.203125,
+            height: 30,
+          },
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            color: "#adcded",
+          },
+        },
+        {
+          id: "QUARK",
+          label: "Quark",
+          meta: {
+            forceDimensions: false,
+          },
+          dimension: {
+            width: 54.09375,
+            height: 30,
+          },
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            color: "#aae3f5",
+          },
+        },
+        {
+          id: "ALIEN",
+          label: "Alien",
+          meta: {
+            forceDimensions: false,
+          },
+          dimension: {
+            width: 47.90625,
+            height: 30,
+          },
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            color: "#a8385d",
+          },
+        },
+        {
+          id: "BASHIR",
+          label: "Bashir",
+          meta: {
+            forceDimensions: false,
+          },
+          dimension: {
+            width: 55.171875,
+            height: 30,
+          },
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            color: "#7aa3e5",
+          },
+        },
+        {
+          id: "BATSMAN",
+          label: "Batsman",
+          meta: {
+            forceDimensions: false,
+          },
+          dimension: {
+            width: 69.421875,
+            height: 30,
+          },
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            color: "#a27ea8",
+          },
+        },
+      ]);
+      return;
+    }
     const chars = this.graphData[0];
     const nodes = chars.map((char) => {
-      console.log(char);
       const label = char.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
       return { id: char, label: label };
     });
+    console.log("prepareNodes", nodes);
     this.graphNodes$.next(nodes);
-    // return nodes;
   }
 
   // 0: (3) ["SISKO", "CREWMAN", "DEELA"]

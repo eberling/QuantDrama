@@ -25,4 +25,9 @@ interface Season {
   episodes: Episode[];
 }
 
-export { Season, Episode, Scene, Char, EpisodeChar };
+interface DynamicPair {
+  chars: EpisodeChar[];
+  dynamicType: String;
+}
+
+export { Season, Episode, Scene, Char, EpisodeChar, DynamicPair };
