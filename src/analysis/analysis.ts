@@ -1,4 +1,4 @@
-import { Scene, EpisodeChar, DynamicPair, Dynamic } from "./interface-show";
+import { Scene, EpisodeChar, DynamicPair } from "./interface-show";
 
 function filterCharsFromScene(filter: string[], scene: Scene): Scene {
   const sceneCpy = { ...scene };
