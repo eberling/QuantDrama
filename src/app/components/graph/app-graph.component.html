@@ -32,22 +32,18 @@
   ]"
 >
 </ngx-graph> -->
-<div class="" *ngIf="links && nodes">
+<div class="graph--container__size" *ngIf="links && nodes">
   <ngx-graph
     [draggingEnabled]="true"
-    [panningEnabled]="false"
+    [panningEnabled]="true"
     [enableZoom]="false"
     [links]="links"
     [nodes]="nodes"
     layout="colaForceDirected"
-    [minZoomLevel]="minZoomLevel"
-    [maxZoomLevel]="maxZoomLevel"
-    autoZoom="true"
     autoCenter="true"
     [update$]="update$"
     [center$]="center$"
     [zoomToFit$]="zoomToFit$"
-    [view]="[800, 600]"
   >
     <ng-template #defsTemplate>
       <svg:marker
@@ -58,6 +54,7 @@
         markerWidth="4"
         markerHeight="4"
         orient="auto"
+        fill="white"
       >
         <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
       </svg:marker>
@@ -84,13 +81,13 @@
     <ng-template #linkTemplate let-link>
       <svg:g class="edge">
         <svg:path
-          *ngIf="link.label === 'dominance'; else noMark"
+          *ngIf="link.label === 'dominance'; else undirected"
           class="line"
           stroke-width="3"
           marker-end="url(#arrow)"
         ></svg:path>
 
-        <ng-template #noMark>
+        <ng-template #undirected>
           <svg:path
             *ngIf="link.id !== 'dominance'"
             class="line"

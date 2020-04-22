@@ -1,18 +1,31 @@
 <div class="App">
   <div class="App--header">
-    <h2>Deep Space 9 - Character Dynamics</h2>
+    <h1>Deep Space 9 - Character Dynamics</h1>
   </div>
   <div class="App--data">
-    <div>
-      <label>Choose a Season:</label>
-      <select (change)="onSeasonSelect($event.target.value)">
+    <form
+      [formGroup]="form"
+      class="App--form grid grid-cols-1 grid-cols-1 md:grid-cols-2 md:w-1/2 m-auto rounded-t-lg"
+    >
+      <label class="md:col-span-2">Choose Mode: </label>
+      <div class="">
+        <button class="text-center w-1/2 rounded-r-none">Season</button>
+        <button class="text-center w-1/2 rounded-l-none">Episode</button>
+      </div>
+      <label class="md:col-span-2">Choose a Season:</label>
+      <select
+        class="w-1/2 m-auto"
+        (change)="onSeasonSelect($event.target.value)"
+      >
         <option value="---">---</option>
         <option *ngFor="let number of seasons; index as i" [value]="i + 1">
           Season {{ i + 1 }}
         </option>
       </select>
-      <label>Choose an Episode:</label>
+      <label class="md:col-span-2">Choose an Episode:</label>
       <select
+        class="w-1/2 m-auto"
+        [ngModelOptions]="{ standalone: true }"
         [ngModel]="dataService.season$ | async"
         (ngModelChange)="onEpisodeSelect($event)"
       >
@@ -24,8 +37,10 @@
           {{ episode.episodeNum }}: {{ episode.title }}
         </option>
       </select>
-      <label>Choose Characters:</label>
-      <form [formGroup]="form">
+      <div *ngIf="!_isEmpty(form.get('chars').value)" class="form--characters">
+        <label class="form--label--characters md:col-span-2">
+          Choose Characters:</label
+        >
         <label
           formGroupName="chars"
           *ngFor="let char of form.get('chars').value | keyvalue"
@@ -36,24 +51,27 @@
           />
           {{ char.key }}
         </label>
-
-        <label>Choose Relationships: </label>
+      </div>
+      <label class="md:col-span-2">Choose Relationships: </label>
+      <div class="grid grid-cols-2">
         <label
+          class="text-center"
           formGroupName="dynamics"
           *ngFor="let dynamics of form.get('dynamics').value | keyvalue"
         >
-          {{ dynamics.key }}
           <input
             type="checkbox"
             [formControlName]="dynamics.key"
             [value]="dynamics.value"
           />
+          {{ dynamics.key }}
         </label>
-      </form>
-      <button (click)="draw()">Draw</button>
-      <div class="App--graph">
-        <app-graph></app-graph>
-        <!-- <ngx-graph
+      </div>
+      <button class="w-full" (click)="draw()">Draw</button>
+    </form>
+    <div class="App--graph rounded-b-lg">
+      <app-graph></app-graph>
+      <!-- <ngx-graph
           class="chart-container"
           [view]="[500, 200]"
           [links]="[
@@ -86,7 +104,6 @@
           ]"
         >
         </ngx-graph> -->
-      </div>
     </div>
   </div>
 </div>

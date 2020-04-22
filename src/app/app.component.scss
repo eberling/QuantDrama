@@ -1,5 +1,5 @@
 .App--header {
-  background-color: #222;
+  background-color: #080827;
   height: 150px;
   padding: 20px;
   color: white;
@@ -9,20 +9,34 @@
 .App--data {
   margin: auto;
   padding: 1em;
-  background-color: #eee;
+  background-color: #272058;
   border: 1px solid #ccc;
 }
 
-.App-form {
-  text-align: center;
-  font-size: 1.4em;
-}
+// .App--form {
+//   margin: auto;
+//   display: grid;
+//   // grid-template-columns: 1fr;
+//   text-align: center;
+//   font-size: 1.4em;
+// }
 
 .App--graph {
   margin: auto;
   padding: 1em;
-  background-color: #eee;
-  border: 1px solid #ccc;
+  background-color: #080827;
+  // border-bottom: 2px solid #ff6363;
+  // border-left: 2px solid #ff6363;
+  // border-right: 2px solid #ff6363;
   /* width: 450px; */
   // height: 300px;
+}
+
+.form--characters {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form--label--characters {
+  grid-column-start: span 3;
 }

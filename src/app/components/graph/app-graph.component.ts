@@ -3,7 +3,7 @@ import { FirebaseDataService } from "./../../services/firebase-data.service";
 import { Component, OnInit, Output } from "@angular/core";
 import * as shape from "d3-shape";
 import { Edge, Node, ClusterNode, Layout } from "@swimlane/ngx-graph";
-import { nodes, clusters, links } from "./../../data";
+import { nodes, clusters, links } from "../../exampleData";
 import { Subject } from "rxjs";
 
 @Component({

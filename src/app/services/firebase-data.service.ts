@@ -20,7 +20,6 @@ export class FirebaseDataService {
   constructor(private db: AngularFirestore) {
     this.seasons$ = of(7);
     this.episode$.subscribe((episode) => this.chars$.next(episode.chars));
-
     this.graphFormData$ = combineLatest(
       this.selectedChars$,
       this.selectedDynamics$,

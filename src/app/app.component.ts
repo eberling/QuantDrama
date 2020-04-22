@@ -26,8 +26,10 @@ export class AppComponent implements OnInit {
       chars: new FormGroup({}),
       dynamics: new FormGroup({}),
     });
+    console.log(this.form.get("chars").value);
+    console.log(!!this.form.get("chars").value);
+
     this.initForms();
-    console.log("t");
     this.onFormChanges();
   }
 
@@ -93,5 +95,12 @@ export class AppComponent implements OnInit {
   draw() {
     this.analysisService.prepareLinks();
     this.analysisService.prepareNodes();
+  }
+
+  _isEmpty(obj) {
+    for (var x in obj) {
+      return false;
+    }
+    return true;
   }
 }
