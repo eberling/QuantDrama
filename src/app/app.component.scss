@@ -1,3 +1,8 @@
+$button-color: hsla(191, 76%, 47%, 1);
+
+.w-20p {
+  width: 20%;
+}
 .App--header {
   background-color: #080827;
   height: 150px;
@@ -7,10 +12,32 @@
 }
 
 .App--data {
-  margin: auto;
-  padding: 1em;
-  background-color: #272058;
-  border: 1px solid #ccc;
+  // color: white;
+  // margin: auto;
+  // padding: 1em;
+  // background-color: #080827;
+  // border: 1px solid #ccc;
+
+  label {
+    input {
+      display: none;
+    }
+  }
+}
+
+select {
+  border: 1px solid $button-color;
+  padding: 5px 8px 5px 8px;
+  background-color: #080827;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 200;
+
+  &:hover {
+    background-color: #1db2d3;
+  }
+
+  transition: 0.2s all;
 }
 
 // .App--form {
@@ -35,6 +62,9 @@
 .form--characters {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  label {
+    padding: 0.2rem 0.2rem;
+  }
 }
 
 .form--label--characters {

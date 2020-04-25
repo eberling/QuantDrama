@@ -5,57 +5,58 @@
   <div class="App--data">
     <form
       [formGroup]="form"
-      class="App--form grid grid-cols-1 grid-cols-1 md:grid-cols-2 md:w-1/2 m-auto rounded-t-lg"
+      class="App--form grid justify-center text-center text-white px-2"
     >
-      <label class="md:col-span-2">Choose Mode: </label>
-      <div class="">
-        <button class="text-center w-1/2 rounded-r-none">Season</button>
-        <button class="text-center w-1/2 rounded-l-none">Episode</button>
+      <label class="">Choose Mode: </label>
+      <div class="my-1 flex justify-center">
+        <button class="text-center rounded-r-none w-20p">Season</button>
+        <button class="text-center rounded-l-none w-20p">Episode</button>
       </div>
-      <label class="md:col-span-2">Choose a Season:</label>
-      <select
-        class="w-1/2 m-auto"
-        (change)="onSeasonSelect($event.target.value)"
-      >
-        <option value="---">---</option>
-        <option *ngFor="let number of seasons; index as i" [value]="i + 1">
-          Season {{ i + 1 }}
-        </option>
-      </select>
-      <label class="md:col-span-2">Choose an Episode:</label>
-      <select
-        class="w-1/2 m-auto"
-        [ngModelOptions]="{ standalone: true }"
-        [ngModel]="dataService.season$ | async"
-        (ngModelChange)="onEpisodeSelect($event)"
-      >
-        <option value="---">---</option>
-        <option
-          *ngFor="let episode of dataService.season$ | async"
-          [ngValue]="episode"
-        >
-          {{ episode.episodeNum }}: {{ episode.title }}
-        </option>
-      </select>
-      <div *ngIf="!_isEmpty(form.get('chars').value)" class="form--characters">
-        <label class="form--label--characters md:col-span-2">
-          Choose Characters:</label
-        >
-        <label
-          formGroupName="chars"
-          *ngFor="let char of form.get('chars').value | keyvalue"
-          ><input
-            type="checkbox"
-            [formControlName]="char.key"
-            [value]="char.value"
-          />
-          {{ char.key }}
-        </label>
+      <label class="">Choose a Season:</label>
+      <div class="select-container flex my-1 justify-center">
+        <select (change)="onSeasonSelect($event.target.value)">
+          <option value="---">---</option>
+          <option *ngFor="let number of seasons; index as i" [value]="i + 1">
+            Season {{ i + 1 }}
+          </option>
+        </select>
       </div>
-      <label class="md:col-span-2">Choose Relationships: </label>
-      <div class="grid grid-cols-2">
+      <label class="">Choose an Episode:</label>
+      <div class="select-container flex my-1 justify-center">
+        <select
+          [ngModelOptions]="{ standalone: true }"
+          [ngModel]="dataService.season$ | async"
+          (ngModelChange)="onEpisodeSelect($event)"
+        >
+          <option value="---">---</option>
+          <option
+            *ngFor="let episode of dataService.season$ | async"
+            [ngValue]="episode"
+          >
+            {{ episode.episodeNum }}: {{ episode.title }}
+          </option>
+        </select>
+      </div>
+      <ng-container *ngIf="!_isEmpty(form.get('chars').value)">
+        <label class="transition-all duration-200"> Choose Characters:</label>
+        <div class="transition-all duration-200 grid grid-cols-4">
+          <label
+            class="button transition-all duration-200"
+            formGroupName="chars"
+            *ngFor="let char of form.get('chars').value | keyvalue"
+            ><input
+              type="checkbox"
+              [formControlName]="char.key"
+              [value]="char.value"
+            />
+            {{ char.key }}
+          </label>
+        </div>
+      </ng-container>
+      <label class="">Choose Relationships: </label>
+      <div class="grid grid-cols-4 my-1">
         <label
-          class="text-center"
+          class="text-center button"
           formGroupName="dynamics"
           *ngFor="let dynamics of form.get('dynamics').value | keyvalue"
         >

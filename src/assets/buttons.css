@@ -5,16 +5,19 @@ a.button {
 button,
 input[type="submit"],
 .button {
-  background-color: hsla(191, 76%, 47%, 1);
-  border-radius: 19px;
+  /* background-color: hsla(191, 76%, 47%, 1); */
+  background-color: transparent;
+  border-radius: 11px;
   border: 1px solid hsla(191, 76%, 37%, 1);
   box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.2);
   color: white;
   font-size: 0.8rem;
   font-weight: 300;
   outline: none;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 1.1rem;
+  margin: 0.2em;
   transition: 0.2s all;
+  cursor: pointer;
 }
 /* 
 @media screen and (max-width: 480px) {
