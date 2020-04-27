@@ -1,4 +1,7 @@
 $button-color: hsla(191, 76%, 47%, 1);
+.App {
+  background-color: #080827;
+}
 
 .w-20p {
   width: 20%;
@@ -40,6 +43,10 @@ select {
   transition: 0.2s all;
 }
 
+.episode--select__min-width {
+  min-width: 150px;
+}
+
 // .App--form {
 //   margin: auto;
 //   display: grid;
@@ -68,5 +75,22 @@ select {
 }
 
 .form--label--characters {
-  grid-column-start: span 3;
+  grid-column-start: span 4;
+
+  .button {
+    padding: 1px 12px;
+  }
+}
+
+.button,
+button {
+  box-shadow: 2px 2px 0px 0px hsla(191, 76%, 37%);
+}
+
+.char--buttons__padding {
+  padding: 1px 12px;
+}
+
+.selected {
+  background-color: hsla(191, 76%, 47%, 1);
 }

@@ -1,3 +1,5 @@
+import { Subject, BehaviorSubject } from "rxjs";
+import { Observable, fromEventPattern } from "rxjs";
 import { AppGraphComponent } from "./components/graph/app-graph.component";
 import { FormControl, FormGroup } from "@angular/forms";
 import { FormBuilder } from "@angular/forms";
@@ -5,15 +7,42 @@ import { AnalysisService } from "./services/analysis.service";
 import { FirebaseDataService } from "./services/firebase-data.service";
 import { Component, OnInit, ViewChild } from "@angular/core";
 import { debounceTime, map } from "rxjs/operators";
+import { trigger, transition, style, animate } from "@angular/animations";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
+  animations: [
+    trigger("inOutAnimation", [
+      transition(":enter", [
+        style({ height: 0, opacity: 0 }),
+        animate("0.2s ease-out", style({ height: "100%", opacity: 1 })),
+      ]),
+      transition(":leave", [
+        style({ height: "100%", opacity: 1 }),
+        animate("0.2s ease-in", style({ height: 0, opacity: 0 })),
+      ]),
+    ]),
+    trigger("inOutOpacity", [
+      transition(":enter", [
+        style({ opacity: 0 }),
+        animate("0.2s ease-out", style({ opacity: 1 })),
+      ]),
+      transition(":leave", [
+        style({ opacity: 1 }),
+        animate("0.s ease-in", style({ opacity: 0 })),
+      ]),
+    ]),
+  ],
 })
 export class AppComponent implements OnInit {
-  seasons: Array<number>;
+  seasons$: Observable<number[]>;
   form: FormGroup;
+  seasonMode = null;
+  clicks$: Observable<any>;
+  mode$ = new Subject();
+
   constructor(
     private dataService: FirebaseDataService,
     private analysisService: AnalysisService,
@@ -21,13 +50,20 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.dataService.seasons$.subscribe((num) => (this.seasons = Array(num)));
+    this.seasons$ = this.dataService.seasons$.pipe(map((num) => Array(num)));
+
     this.form = this.fb.group({
       chars: new FormGroup({}),
       dynamics: new FormGroup({}),
     });
-    console.log(this.form.get("chars").value);
-    console.log(!!this.form.get("chars").value);
+
+    // this.dataService.season$.subscribe((season) => {
+    //   this.form.get("season").setValue(season);
+    // });
+
+    // this.form.get("season").valueChanges.subscribe((season) => {
+    //   this.dataService.season$.next(season);
+    // });
 
     this.initForms();
     this.onFormChanges();
@@ -50,17 +86,20 @@ export class AppComponent implements OnInit {
     });
   }
 
-  onSeasonSelect(season) {
-    this.dataService.setSeason(season);
+  onModeSelect(mode) {
+    this.form.get("mode").valueChanges.subscribe();
   }
 
-  onEpisodeSelect(episode) {
-    this.dataService.setEpisode(episode);
-  }
+  resetForm() {}
 
   onCharSelect(e) {
     this.dataService.selectedChars$.next(e.target.value);
     console.log(e.target.value);
+  }
+
+  onDraw() {
+    this.analysisService.prepareLinks();
+    this.analysisService.prepareNodes();
   }
 
   onFormChanges(): void {
@@ -92,15 +131,19 @@ export class AppComponent implements OnInit {
       });
   }
 
-  draw() {
-    this.analysisService.prepareLinks();
-    this.analysisService.prepareNodes();
-  }
-
   _isEmpty(obj) {
     for (var x in obj) {
       return false;
     }
     return true;
+  }
+
+  _isDynamicSelected() {
+    console.log(
+      "i dont even exist",
+      this.form.get("dynamics").value,
+      this.form.get("dynamics").value.some((d) => d)
+    );
+    this.form.get("dynamics").value.some((d) => d);
   }
 }

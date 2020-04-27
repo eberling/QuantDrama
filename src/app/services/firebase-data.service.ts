@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { calculateEpisodeIndependence } from "src/analysis/analysis";
-import { Observable, Subject, of, combineLatest } from "rxjs";
+import { Observable, Subject, of, combineLatest, BehaviorSubject } from "rxjs";
 import { Episode, Char } from "src/analysis/interface-show";
 import { AngularFirestore, DocumentData } from "angularfire2/firestore";
 
@@ -11,11 +11,14 @@ export class FirebaseDataService {
   episode$: Subject<Episode> = new Subject();
   seasons$: Observable<number>;
   season$: Subject<Episode[] | DocumentData[]> = new Subject();
+  seasonNum$: Subject<number> = new Subject();
   chars$: Subject<String[]> = new Subject();
   selectedChars$: Subject<any> = new Subject();
   selectedDynamics$: Subject<any> = new Subject();
   graphData$: Subject<any>;
   graphFormData$: Observable<any>;
+  seasonMode$ = new BehaviorSubject(null);
+  isLoading$ = new BehaviorSubject(false);
 
   constructor(private db: AngularFirestore) {
     this.seasons$ = of(7);
@@ -26,6 +29,11 @@ export class FirebaseDataService {
       this.episode$,
       this.season$
     );
+
+    this.seasonMode$.subscribe((mode) => {
+      this.chars$.next(null);
+      this.seasonNum$.next(null);
+    });
   }
 
   setGraph(season, episode = null, chars) {}
@@ -75,17 +83,14 @@ export class FirebaseDataService {
     return this.db.collection("season_1").get();
   }
 
-  setEpisode(episode: Episode) {
-    // console.log(Object.keys(event));
-    this.episode$.next(episode);
-  }
-
   setSelectedChars(chars) {
     console.log(chars);
     this.selectedChars$.next(chars);
   }
 
   setSeason(season: number) {
+    this.isLoading$.next(true);
+    console.log(season);
     // console.log(`season_${season}`);
     this.db
       .collection(`season_${season}`)
@@ -95,6 +100,7 @@ export class FirebaseDataService {
         //   "FirebaseDataService -> getSeason -> snapshot",
         // snapshot.docs;
         // );
+        this.seasonNum$.next(season);
         this.season$.next(
           snapshot.docs
             .map((doc) => {
@@ -103,6 +109,7 @@ export class FirebaseDataService {
             })
             .sort((a, b) => a.episodeNum - b.episodeNum)
         );
+        this.isLoading$.next(false);
       });
   }
 }

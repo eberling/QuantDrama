@@ -51,6 +51,13 @@ input[type="submit"]:active,
   transform: translate(1px, 1px);
 }
 
+button:focus,
+input[type="submit"]:active,
+.button:active {
+  outline: none;
+  text-shadow: 0px 1px 5px white;
+}
+
 button:disabled,
 input[type="submit"]:disabled,
 .button:disabled {

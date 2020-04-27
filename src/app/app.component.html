@@ -9,39 +9,79 @@
     >
       <label class="">Choose Mode: </label>
       <div class="my-1 flex justify-center">
-        <button class="text-center rounded-r-none w-20p">Season</button>
-        <button class="text-center rounded-l-none w-20p">Episode</button>
-      </div>
-      <label class="">Choose a Season:</label>
-      <div class="select-container flex my-1 justify-center">
-        <select (change)="onSeasonSelect($event.target.value)">
-          <option value="---">---</option>
-          <option *ngFor="let number of seasons; index as i" [value]="i + 1">
-            Season {{ i + 1 }}
-          </option>
-        </select>
-      </div>
-      <label class="">Choose an Episode:</label>
-      <div class="select-container flex my-1 justify-center">
-        <select
-          [ngModelOptions]="{ standalone: true }"
-          [ngModel]="dataService.season$ | async"
-          (ngModelChange)="onEpisodeSelect($event)"
+        <button
+          [class.selected]="this.dataService.seasonMode$ | async"
+          (click)="this.dataService.seasonMode$.next(true)"
+          class="text-center rounded-r-none w-20p"
         >
-          <option value="---">---</option>
-          <option
-            *ngFor="let episode of dataService.season$ | async"
-            [ngValue]="episode"
-          >
-            {{ episode.episodeNum }}: {{ episode.title }}
-          </option>
-        </select>
+          Season
+        </button>
+        <button
+          [class.selected]="
+            !(this.dataService.seasonMode$ | async) &&
+            (this.dataService.seasonMode$ | async) !== null
+          "
+          (click)="this.dataService.seasonMode$.next(false)"
+          class="text-center rounded-l-none w-20p"
+        >
+          Episode
+        </button>
       </div>
+      <ng-container *ngIf="(this.dataService.seasonMode$ | async) !== null">
+        <label class="">Choose a Season:</label>
+        <div class="select-container flex my-1 justify-center">
+          <select
+            [ngModel]="this.dataService.seasonNum$ | async"
+            [ngModelOptions]="{ standalone: true }"
+            (change)="this.dataService.setSeason($event.target.value)"
+          >
+            <option></option>
+            <option
+              *ngFor="let number of seasons$ | async; index as i"
+              [value]="i + 1"
+            >
+              Season {{ i + 1 }}
+            </option>
+          </select>
+        </div>
+      </ng-container>
+      <ng-container
+        *ngIf="
+          !(this.dataService.seasonMode$ | async) &&
+          (this.dataService.seasonMode$ | async) !== null
+        "
+      >
+        <label
+          [style.opacity]="(this.dataService.isLoading$ | async) ? 0.3 : 1"
+        >
+          Choose an Episode:
+        </label>
+        <div
+          [style.opacity]="(this.dataService.isLoading$ | async) ? 0.3 : 1"
+          class="select-container flex my-1 justify-center"
+        >
+          <select
+            class="episode--select__min-width"
+            [ngModelOptions]="{ standalone: true }"
+            [ngModel]="dataService.episode$ | async"
+            (ngModelChange)="this.dataService.episode$.next($event)"
+          >
+            <option value="---">---</option>
+            <option
+              *ngFor="let episode of dataService.season$ | async"
+              [ngValue]="episode"
+            >
+              {{ episode.episodeNum }}: {{ episode.title }}
+            </option>
+          </select>
+        </div>
+      </ng-container>
       <ng-container *ngIf="!_isEmpty(form.get('chars').value)">
-        <label class="transition-all duration-200"> Choose Characters:</label>
-        <div class="transition-all duration-200 grid grid-cols-4">
+        <label [@inOutAnimation]> Choose Characters:</label>
+        <div [@inOutAnimation] class="grid grid-cols-4 p-2">
           <label
-            class="button transition-all duration-200"
+            class="button char--buttons__padding"
+            [class.selected]="char.value"
             formGroupName="chars"
             *ngFor="let char of form.get('chars').value | keyvalue"
             ><input
@@ -53,22 +93,32 @@
           </label>
         </div>
       </ng-container>
-      <label class="">Choose Relationships: </label>
-      <div class="grid grid-cols-4 my-1">
-        <label
-          class="text-center button"
-          formGroupName="dynamics"
-          *ngFor="let dynamics of form.get('dynamics').value | keyvalue"
+      <ng-container>
+        <!-- TOOD <ng-container *ngIf="chars && relationships"> -->
+        <label class="">Choose Relationships: </label>
+        <div class="grid grid-cols-4 my-1">
+          <label
+            class="text-center button"
+            [class.selected]="dynamics.value"
+            formGroupName="dynamics"
+            *ngFor="let dynamics of form.get('dynamics').value | keyvalue"
+          >
+            <input
+              type="checkbox"
+              [formControlName]="dynamics.key"
+              [value]="dynamics.value"
+            />
+            {{ dynamics.key }}
+          </label>
+        </div>
+        <button
+          class="w-full"
+          [style.opacity]="_isDynamicSelected ? 1 : 0.3"
+          (click)="onDraw()"
         >
-          <input
-            type="checkbox"
-            [formControlName]="dynamics.key"
-            [value]="dynamics.value"
-          />
-          {{ dynamics.key }}
-        </label>
-      </div>
-      <button class="w-full" (click)="draw()">Draw</button>
+          Draw
+        </button>
+      </ng-container>
     </form>
     <div class="App--graph rounded-b-lg">
       <app-graph></app-graph>
