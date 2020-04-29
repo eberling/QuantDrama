@@ -31,13 +31,19 @@
         <label class="">Choose a Season:</label>
         <div class="select-container flex my-1 justify-center">
           <select
-            [ngModel]="this.dataService.seasonNum$ | async"
+            required
+            [ngModel]="this.dataService.selectedSeason$ | async"
             [ngModelOptions]="{ standalone: true }"
-            (change)="this.dataService.setSeason($event.target.value)"
+            (change)="
+              this.dataService.selectedSeason$.next($event.target.value)
+            "
           >
-            <option></option>
+            <option disabled selected></option>
             <option
-              *ngFor="let number of seasons$ | async; index as i"
+              *ngFor="
+                let season of this.dataService.seasons$ | async;
+                index as i
+              "
               [value]="i + 1"
             >
               Season {{ i + 1 }}
@@ -57,18 +63,24 @@
           Choose an Episode:
         </label>
         <div
-          [style.opacity]="(this.dataService.isLoading$ | async) ? 0.3 : 1"
+          [style.opacity]="
+            (this.dataService.isLoading$ | async) ||
+            !(this.dataService.episodes$ | async)
+              ? 0.3
+              : 1
+          "
           class="select-container flex my-1 justify-center"
         >
           <select
+            required
             class="episode--select__min-width"
             [ngModelOptions]="{ standalone: true }"
-            [ngModel]="dataService.episode$ | async"
-            (ngModelChange)="this.dataService.episode$.next($event)"
+            [ngModel]="dataService.selectedEpisode$ | async"
+            (ngModelChange)="this.dataService.selectedEpisode$.next($event)"
           >
-            <option value="---">---</option>
+            <option disabled selected value="---">---</option>
             <option
-              *ngFor="let episode of dataService.season$ | async"
+              *ngFor="let episode of dataService.episodes$ | async"
               [ngValue]="episode"
             >
               {{ episode.episodeNum }}: {{ episode.title }}
@@ -80,7 +92,7 @@
         <label [@inOutAnimation]> Choose Characters:</label>
         <div [@inOutAnimation] class="grid grid-cols-4 p-2">
           <label
-            class="button char--buttons__padding"
+            class="button char--buttons"
             [class.selected]="char.value"
             formGroupName="chars"
             *ngFor="let char of form.get('chars').value | keyvalue"
@@ -113,7 +125,7 @@
         </div>
         <button
           class="w-full"
-          [style.opacity]="_isDynamicSelected ? 1 : 0.3"
+          [style.opacity]="_isDynamicSelected() ? 1 : 0.3"
           (click)="onDraw()"
         >
           Draw

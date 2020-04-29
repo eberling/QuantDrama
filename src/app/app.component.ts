@@ -1,11 +1,8 @@
-import { Subject, BehaviorSubject } from "rxjs";
-import { Observable, fromEventPattern } from "rxjs";
-import { AppGraphComponent } from "./components/graph/app-graph.component";
-import { FormControl, FormGroup } from "@angular/forms";
+import { FormControl, FormGroup, FormArray } from "@angular/forms";
 import { FormBuilder } from "@angular/forms";
 import { AnalysisService } from "./services/analysis.service";
 import { FirebaseDataService } from "./services/firebase-data.service";
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { debounceTime, map } from "rxjs/operators";
 import { trigger, transition, style, animate } from "@angular/animations";
 
@@ -37,11 +34,7 @@ import { trigger, transition, style, animate } from "@angular/animations";
   ],
 })
 export class AppComponent implements OnInit {
-  seasons$: Observable<number[]>;
   form: FormGroup;
-  seasonMode = null;
-  clicks$: Observable<any>;
-  mode$ = new Subject();
 
   constructor(
     private dataService: FirebaseDataService,
@@ -50,31 +43,29 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.seasons$ = this.dataService.seasons$.pipe(map((num) => Array(num)));
-
     this.form = this.fb.group({
       chars: new FormGroup({}),
       dynamics: new FormGroup({}),
     });
 
-    // this.dataService.season$.subscribe((season) => {
-    //   this.form.get("season").setValue(season);
-    // });
-
-    // this.form.get("season").valueChanges.subscribe((season) => {
-    //   this.dataService.season$.next(season);
-    // });
-
     this.initForms();
     this.onFormChanges();
+    this.dataService.episodes$.subscribe((x) => console.log(x));
   }
 
   initForms() {
     this.dataService.chars$.subscribe((chars) => {
-      const checkboxes = <FormGroup>this.form.get("chars");
-      if (chars) {
-        chars.forEach((char: string) => {
-          checkboxes.addControl(char, new FormControl(false));
+      let checkboxes = <FormGroup>this.form.get("chars");
+      if (chars === null && !this._isEmpty(checkboxes)) {
+        this.form.removeControl("chars");
+        this.form.addControl("chars", new FormGroup({}));
+      }
+
+      // checkboxes.reset(false);
+
+      if (!this._isEmpty(chars)) {
+        Object.values(chars).forEach((char) => {
+          checkboxes.addControl(Object.keys(char)[0], new FormControl(false));
         });
       }
     });
@@ -85,12 +76,6 @@ export class AppComponent implements OnInit {
       dynamicsForm.addControl(Object.keys(dynamic)[0], new FormControl(false));
     });
   }
-
-  onModeSelect(mode) {
-    this.form.get("mode").valueChanges.subscribe();
-  }
-
-  resetForm() {}
 
   onCharSelect(e) {
     this.dataService.selectedChars$.next(e.target.value);
@@ -103,7 +88,6 @@ export class AppComponent implements OnInit {
   }
 
   onFormChanges(): void {
-    console.log("g");
     this.form.controls.chars.valueChanges
       .pipe(
         debounceTime(100),
@@ -116,7 +100,6 @@ export class AppComponent implements OnInit {
       .subscribe((checkedBoxes) => {
         this.dataService.selectedChars$.next(checkedBoxes);
       });
-    // this should be an observable, combineLatest style?
     this.form.controls.dynamics.valueChanges
       .pipe(
         map((dynamicsObj) => {
@@ -126,7 +109,6 @@ export class AppComponent implements OnInit {
         })
       )
       .subscribe((checkedBoxes) => {
-        console.log(checkedBoxes);
         this.dataService.selectedDynamics$.next(checkedBoxes);
       });
   }
@@ -139,11 +121,12 @@ export class AppComponent implements OnInit {
   }
 
   _isDynamicSelected() {
-    console.log(
-      "i dont even exist",
-      this.form.get("dynamics").value,
-      this.form.get("dynamics").value.some((d) => d)
+    const dynamics = Object.values(this.form.get("dynamics").value).some(
+      (c) => {
+        return c;
+      }
     );
-    this.form.get("dynamics").value.some((d) => d);
+    const chars = Object.values(this.form.get("chars").value).some((c) => c);
+    return dynamics && chars;
   }
 }
