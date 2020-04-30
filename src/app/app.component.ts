@@ -1,9 +1,9 @@
-import { FormControl, FormGroup, FormArray } from "@angular/forms";
+import { FormControl, FormGroup, FormArray, Validators } from "@angular/forms";
 import { FormBuilder } from "@angular/forms";
 import { AnalysisService } from "./services/analysis.service";
 import { FirebaseDataService } from "./services/firebase-data.service";
 import { Component, OnInit } from "@angular/core";
-import { debounceTime, map } from "rxjs/operators";
+import { debounceTime, map, tap } from "rxjs/operators";
 import { trigger, transition, style, animate } from "@angular/animations";
 
 @Component({
@@ -49,23 +49,21 @@ export class AppComponent implements OnInit {
     });
 
     this.initForms();
-    this.onFormChanges();
     this.dataService.episodes$.subscribe((x) => console.log(x));
   }
 
   initForms() {
     this.dataService.chars$.subscribe((chars) => {
       let checkboxes = <FormGroup>this.form.get("chars");
+
       if (chars === null && !this._isEmpty(checkboxes)) {
         this.form.removeControl("chars");
         this.form.addControl("chars", new FormGroup({}));
       }
-
       // checkboxes.reset(false);
-
-      if (!this._isEmpty(chars)) {
+      if (chars) {
         Object.values(chars).forEach((char) => {
-          checkboxes.addControl(Object.keys(char)[0], new FormControl(false));
+          checkboxes.addControl(char, new FormControl(false));
         });
       }
     });
@@ -83,34 +81,20 @@ export class AppComponent implements OnInit {
   }
 
   onDraw() {
+    const cCheckboxes = this.form.controls.chars.value;
+    const chars = Object.entries(cCheckboxes)
+      .filter(([key, val]) => val)
+      .map((e) => e[0]);
+    this.dataService.selectedChars$.next(chars);
+
+    const dCheckboxes = this.form.controls.dynamics.value;
+    const dyns = Object.entries(dCheckboxes)
+      .filter(([key, val]) => val)
+      .map((e) => e[0]);
+    this.dataService.selectedDynamics$.next(dyns);
+
     this.analysisService.prepareLinks();
     this.analysisService.prepareNodes();
-  }
-
-  onFormChanges(): void {
-    this.form.controls.chars.valueChanges
-      .pipe(
-        debounceTime(100),
-        map((charObj) =>
-          Object.entries(charObj)
-            .filter(([key, val]) => val)
-            .map((e) => e[0])
-        )
-      )
-      .subscribe((checkedBoxes) => {
-        this.dataService.selectedChars$.next(checkedBoxes);
-      });
-    this.form.controls.dynamics.valueChanges
-      .pipe(
-        map((dynamicsObj) => {
-          return Object.entries(dynamicsObj)
-            .filter(([key, val]) => val)
-            .map((e) => e[0]);
-        })
-      )
-      .subscribe((checkedBoxes) => {
-        this.dataService.selectedDynamics$.next(checkedBoxes);
-      });
   }
 
   _isEmpty(obj) {
@@ -121,12 +105,12 @@ export class AppComponent implements OnInit {
   }
 
   _isDynamicSelected() {
-    const dynamics = Object.values(this.form.get("dynamics").value).some(
-      (c) => {
-        return c;
-      }
-    );
-    const chars = Object.values(this.form.get("chars").value).some((c) => c);
-    return dynamics && chars;
+    const dBoxes = this.form.get("dynamics").value;
+    const cBoxes = this.form.get("chars").value;
+    const dValues = Object.values(dBoxes);
+    const cValues = Object.values(cBoxes);
+    const d = dValues.some((d) => !!d);
+    const c = cValues.some((c) => !!c);
+    return d && c;
   }
 }

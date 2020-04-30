@@ -23,8 +23,6 @@ import {
   providedIn: "root",
 })
 export class AnalysisService {
-  data$ = new Subject();
-  graphFormData$: Observable<any>;
   graphData: any[];
   dynamicsArray = [
     { alternativity: calculateEpisodeAlternativity },
@@ -37,21 +35,11 @@ export class AnalysisService {
   // graphInput$: Observable<any>;
 
   constructor(private dataService: FirebaseDataService) {
-    // firebaseDataService.selectedChars$.subscribe((x) => console.log(x));
-    // firebaseDataService.episode$.subscribe();
     this.dataService.graphFormData$.subscribe((x) => {
       console.log(x);
       this.graphData = x;
     });
-
-    // this.graphInput$ = combineLatest(this.graphLinks$, this.graphNodes$).pipe(
-    //   map(([links, nodes]) => {
-    //     return [links, nodes];
-    //     /* TODO */
-    //   })
-    // );
   }
-  //   prepareGraphData(selectedDynamics: any[], chars: string[], episode: Episode) {
 
   _getDynamicFunctions(
     selectedDynamics
