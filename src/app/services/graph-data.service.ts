@@ -4,8 +4,8 @@ import {
   EpisodeChar,
   DynamicPair,
 } from "src/analysis/interface-show";
-import { map } from "rxjs/operators";
-import { Subject, Observable, combineLatest } from "rxjs";
+import { map, withLatestFrom } from "rxjs/operators";
+import { Subject, Observable, combineLatest, merge } from "rxjs";
 import { FirebaseDataService } from "./firebase-data.service";
 import { Injectable } from "@angular/core";
 import {
@@ -22,8 +22,8 @@ import {
 @Injectable({
   providedIn: "root",
 })
-export class AnalysisService {
-  graphData: any[];
+export class GraphDataService {
+  graphFormData;
   dynamicsArray = [
     { alternativity: calculateEpisodeAlternativity },
     { concomitance: calculateEpisodeConcomitance },
@@ -32,12 +32,18 @@ export class AnalysisService {
   ];
   graphLinks$ = new Subject();
   graphNodes$ = new Subject();
-  // graphInput$: Observable<any>;
 
   constructor(private dataService: FirebaseDataService) {
-    this.dataService.graphFormData$.subscribe((x) => {
-      console.log(x);
-      this.graphData = x;
+    const ds = this.dataService;
+
+    combineLatest(
+      this.dataService.selectedChars$,
+      this.dataService.selectedDynamics$,
+      this.dataService.selectedEpisode$
+    ).subscribe((graphData) => {
+      this.graphFormData = true;
+      this.updateLinks(graphData[0], graphData[1], graphData[2]);
+      this.updateNodes(graphData[0]);
     });
   }
 
@@ -54,7 +60,6 @@ export class AnalysisService {
 
   _buildGraphLinks(dynamicsPairs: DynamicPair[]) {
     return dynamicsPairs.map((dynamicPair) => {
-      console.log("rel", dynamicPair);
       const id =
         dynamicPair.chars[0].name +
         "+" +
@@ -62,7 +67,6 @@ export class AnalysisService {
         "+" +
         dynamicPair.dynamicType;
       const graphLinkObject = {
-        // id: id,
         source: dynamicPair.chars[0].name,
         target: dynamicPair.chars[1].name,
         label: dynamicPair.dynamicType,
@@ -71,8 +75,8 @@ export class AnalysisService {
     });
   }
 
-  prepareLinks() {
-    if (!this.graphData) {
+  updateLinks(chars, dynamics, episode) {
+    if (!this.graphFormData) {
       this.graphLinks$.next([
         [
           {
@@ -109,9 +113,8 @@ export class AnalysisService {
       ]);
       return;
     }
-    const [chars, selectedDynamics, episode, season] = [...this.graphData];
     // with passed function names retrieve callable functions from all functions object
-    const dynamicFunctions = this._getDynamicFunctions(selectedDynamics);
+    const dynamicFunctions = this._getDynamicFunctions(dynamics);
     console.log(
       "AnalysisService -> prepareLinks -> dynamicFunctions",
       dynamicFunctions
@@ -127,8 +130,8 @@ export class AnalysisService {
     this.graphLinks$.next(graphLinks);
   }
 
-  prepareNodes() {
-    if (!this.graphData) {
+  updateNodes(chars) {
+    if (!this.graphFormData) {
       this.graphNodes$.next([
         {
           id: "SISKO",
@@ -223,13 +226,18 @@ export class AnalysisService {
       ]);
       return;
     }
-    const chars = this.graphData[0];
+    // const chars = this.graphFormData[0];
     const nodes = chars.map((char) => {
       const label = char.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
       return { id: char, label: label };
     });
     console.log("prepareNodes", nodes);
     this.graphNodes$.next(nodes);
+  }
+
+  update() {
+    // this.updateLinks();
+    // this.updateNodes();
   }
 
   // 0: (3) ["SISKO", "CREWMAN", "DEELA"]

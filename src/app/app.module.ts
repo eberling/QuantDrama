@@ -8,6 +8,7 @@ import { NgxGraphModule } from "@swimlane/ngx-graph";
 import { AppGraphComponent } from "./components/graph/app-graph.component";
 import { fbConfig } from "../firebase/firebase-config.js";
 import { AngularFireModule, FirebaseOptionsToken } from "angularfire2";
+import { MatrixTableComponent } from "./components/matrix-table/matrix-table.component";
 
 @NgModule({
   imports: [
@@ -18,7 +19,7 @@ import { AngularFireModule, FirebaseOptionsToken } from "angularfire2";
     NgxGraphModule,
     AngularFireModule.initializeApp(fbConfig),
   ],
-  declarations: [AppComponent, AppGraphComponent],
+  declarations: [AppComponent, AppGraphComponent, MatrixTableComponent],
   bootstrap: [AppComponent],
   providers: [AngularFirestore],
 })

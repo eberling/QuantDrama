@@ -99,7 +99,6 @@ function calculateEpisodeDominance(
       if (
         b.every((bscene) => a.some((ascene) => ascene.title === bscene.title))
       ) {
-        console.log(paired[1].name + " dominated by" + paired[0].name);
         dominations.push({
           chars: [paired[0], paired[1]],
           dynamicType: "dominated by",
@@ -109,7 +108,6 @@ function calculateEpisodeDominance(
       if (
         a.every((ascene) => b.some((bscene) => ascene.title === bscene.title))
       ) {
-        console.log(paired[0].name + " dominated by" + paired[1].name);
         dominations.push({
           chars: [paired[1], paired[0]],
           dynamicType: "dominated by",
@@ -117,6 +115,8 @@ function calculateEpisodeDominance(
       }
     }
   });
+  console.log("epChars", epChars);
+  console.log("dominations", dominations);
   return dominations;
 }
 
@@ -142,19 +142,24 @@ function getCharacterSignatures(
 // weder konkomitant, noch alternativ
 function calculateEpisodeIndependence(chars: string[], scenes: Scene[]) {
   const domPairs = calculateEpisodeDominance(chars, scenes);
-  console.log("dom", domPairs);
-  const altPairs = calculateEpisodeAlternativity(chars, scenes);
-  console.log("con", altPairs);
+  const conPairs = calculateEpisodeConcomitance(chars, scenes);
   const pairs = pair(getCharacterSignatures(chars, scenes));
-  console.log("pairs", pairs);
   const independentPairs = pairs.filter((paired) => {
-    const hasDomPair = domPairs.some((domPair) => {
-      return arraysEqual(domPair.chars, paired);
+    const isDomPair = domPairs.some((domPair) => {
+      const domPairArr = domPair.chars.map((char) => char.name);
+      return paired.every((char) => domPairArr.includes(char.name));
     });
-    const hasConPair = altPairs.some((altPair) => {
-      return arraysEqual(altPair.chars, paired);
+    if (isDomPair) {
+      return false;
+    }
+    const isConPair = conPairs.some((conPair) => {
+      const isConPairArr = conPair.chars.map((char) => char.name);
+      return paired.some((char) => isConPairArr.includes(char.name));
     });
-    return !hasDomPair || !hasConPair;
+    if (isConPair) {
+      return false;
+    }
+    return true;
   });
   const independentDynamicsPair = independentPairs.map((independentPair) => {
     return { chars: independentPair, dynamicType: "independent" };
@@ -167,12 +172,15 @@ const calculateEpisodeAlternativity = (
   scenes: Scene[]
 ): DynamicPair[] => {
   const epChars = getCharacterSignatures(chars, scenes);
+  console.log("epChars", epChars);
   const pairs = pair(epChars);
+  console.log("pairs", pairs);
   const alternatePairs = pairs.filter((paired) => {
     const a = paired[0].scenes;
     const b = paired[1].scenes;
     return a.every((ae) => !b.some((be) => ae.title === be.title));
   });
+  console.log("alternatePairs", alternatePairs);
   const alternatingDynamicsPair = alternatePairs.map((alternatePair) => {
     return { chars: alternatePair, dynamicType: "alternative" };
   });

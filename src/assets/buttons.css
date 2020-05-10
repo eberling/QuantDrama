@@ -61,10 +61,11 @@ input[type="submit"]:active,
 button:disabled,
 input[type="submit"]:disabled,
 .button:disabled {
-  background-color: white;
+  /* background-color: white;
   border-color: #aaa;
   box-shadow: none;
-  color: #aaa;
+  color: #aaa; */
+  opacity: 0.3;
 }
 
 button.forward:after,

@@ -1,7 +1,7 @@
 import { map } from "rxjs/operators";
 import { Injectable } from "@angular/core";
-import { Observable, Subject, of, combineLatest, BehaviorSubject } from "rxjs";
-import { Episode, Season } from "src/analysis/interface-show";
+import { Observable, Subject, of, BehaviorSubject } from "rxjs";
+import { Episode } from "src/analysis/interface-show";
 import { AngularFirestore, DocumentData } from "angularfire2/firestore";
 
 @Injectable({
@@ -26,10 +26,6 @@ export class FirebaseDataService {
 
   constructor(private db: AngularFirestore) {
     this.seasons$ = of([1, 2, 3, 4, 5, 6, 7]);
-    this.graphFormData$ = combineLatest(
-      this.selectedChars$,
-      this.selectedDynamics$
-    );
 
     this.seasonMode$.subscribe((mode) => {
       this.chars$.next(null);
@@ -38,19 +34,12 @@ export class FirebaseDataService {
 
     this.selectedSeason$.subscribe((season) => {
       this.isLoading$.next(true);
-
       this.getEpisodes$(season).subscribe((episodes) => {
         this.episodes$.next(episodes);
         if (this.seasonMode$.value) {
           const allChars = this.getAllCharsFromSeason(<Episode[]>episodes);
           const charsCounted = this.countAndSliceAndSortChars(allChars);
-          console.log(
-            "FirebaseDataService -> constructor -> charsCounted",
-            charsCounted
-          );
           const chars = charsCounted.map((charArr) => charArr[0]);
-          console.log("FirebaseDataService -> constructor -> chars", chars);
-
           this.chars$.next(chars);
           this.charsCount$.next(charsCounted);
         }
@@ -87,7 +76,7 @@ export class FirebaseDataService {
     return chars;
   }
 
-  // Typescript does not support Sets yet, so yeah:
+  // Typescript does not support Sets yet, so here is SO deduping:
   countAndSliceAndSortChars(chars: string[]): [string, number][] {
     let seen = {};
     for (let i = 0; i < chars.length; i++) {
@@ -100,7 +89,6 @@ export class FirebaseDataService {
     }
     const entries: [string, number][] = Object.entries(seen);
     const sorted = entries.sort((a, b) => b[1] - a[1]);
-    console.log(sorted, "sssssoooo");
     const sliced = sorted.slice(0, 10);
     return sliced;
   }

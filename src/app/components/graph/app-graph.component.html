@@ -32,13 +32,16 @@
   ]"
 >
 </ngx-graph> -->
-<div class="graph--container__size" *ngIf="links && nodes">
+<div
+  class="graph--container__size"
+  *ngIf="(links$ | async) && (nodes$ | async)"
+>
   <ngx-graph
     [draggingEnabled]="true"
     [panningEnabled]="true"
     [enableZoom]="false"
-    [links]="links"
-    [nodes]="nodes"
+    [links]="links$ | async"
+    [nodes]="nodes$ | async"
     layout="colaForceDirected"
     autoCenter="true"
     [update$]="update$"
@@ -81,7 +84,7 @@
     <ng-template #linkTemplate let-link>
       <svg:g class="edge">
         <svg:path
-          *ngIf="link.label === 'dominance'; else undirected"
+          *ngIf="link.label === 'dominated by'; else undirected"
           class="line"
           stroke-width="3"
           marker-end="url(#arrow)"
@@ -89,7 +92,7 @@
 
         <ng-template #undirected>
           <svg:path
-            *ngIf="link.id !== 'dominance'"
+            *ngIf="link.id !== 'dominated by'"
             class="line"
             stroke-width="3"
           ></svg:path>
