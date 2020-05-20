@@ -101,6 +101,9 @@ select {
 
 .char--buttons {
   padding: 1px 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-x: hidden;
 }
 
 .selected {

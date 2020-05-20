@@ -57,6 +57,9 @@ function calculateEpisodeConcomitance(
   chars: string[],
   scenes: Scene[]
 ): DynamicPair[] {
+  if (!chars || !scenes) {
+    return null;
+  }
   const episodeChars: EpisodeChar[] = getCharacterSignatures(chars, scenes);
   const concomitantPairs: EpisodeChar[][] = findIdenticalCharSignatures(
     episodeChars
@@ -89,6 +92,9 @@ function calculateEpisodeDominance(
   chars: string[],
   scenes: Scene[]
 ): DynamicPair[] {
+  if (!chars || !scenes) {
+    return null;
+  }
   const epChars = getCharacterSignatures(chars, scenes);
   const pairs = pair(epChars);
   const dominations: DynamicPair[] = [];
@@ -101,7 +107,7 @@ function calculateEpisodeDominance(
       ) {
         dominations.push({
           chars: [paired[0], paired[1]],
-          dynamicType: "dominated by",
+          dynamicType: "dominates",
         });
       }
     } else if (b.length > a.length) {
@@ -110,7 +116,7 @@ function calculateEpisodeDominance(
       ) {
         dominations.push({
           chars: [paired[1], paired[0]],
-          dynamicType: "dominated by",
+          dynamicType: "dominates",
         });
       }
     }
@@ -124,6 +130,9 @@ function getCharacterSignatures(
   chars: string[],
   scenes: Scene[]
 ): EpisodeChar[] {
+  if (!chars || !scenes) {
+    return null;
+  }
   return chars.map((char) => {
     const sceneCache: Scene[] = [];
     scenes.forEach((scene) => {
@@ -139,31 +148,69 @@ function getCharacterSignatures(
   });
 }
 
-// weder konkomitant, noch alternativ
+// const calculateEpisodeIndependence = (
+//   chars: string[],
+//   scenes: Scene[]
+// ): DynamicPair[] => {
+//   if (!chars || !scenes) {
+//     return null;
+//   }
+//   const epChars = getCharacterSignatures(chars, scenes);
+//   console.log("epChars", epChars);
+//   const pairs = pair(epChars);
+//   console.log("pairs", pairs);
+//   const independentPairs = pairs.filter((paired) => {
+//     const a = paired[0].scenes;
+//     const b = paired[1].scenes;
+//     const noCommonScenes = a.every(
+//       (ae) => !b.some((be) => ae.title === be.title)
+//     );
+//     const isComplementary = a.length + b.length === scenes.length;
+//     return noCommonScenes && !isComplementary;
+//   });
+//   console.log("independent", independentPairs);
+//   const independentDynamicsPair = independentPairs.map((independentPair) => {
+//     return { chars: independentPair, dynamicType: "independent" };
+//   });
+//   return independentDynamicsPair;
+// };
+
+// weder konkomitant, noch dominant, speziallfall=> alternativ
 function calculateEpisodeIndependence(chars: string[], scenes: Scene[]) {
+  if (!chars || !scenes) {
+    return null;
+  }
   const domPairs = calculateEpisodeDominance(chars, scenes);
   const conPairs = calculateEpisodeConcomitance(chars, scenes);
+  const altPairs = calculateEpisodeAlternativity(chars, scenes);
   const pairs = pair(getCharacterSignatures(chars, scenes));
   const independentPairs = pairs.filter((paired) => {
     const isDomPair = domPairs.some((domPair) => {
-      const domPairArr = domPair.chars.map((char) => char.name);
-      return paired.every((char) => domPairArr.includes(char.name));
+      const domPairCharNames = domPair.chars.map((char) => char.name);
+      return paired.every((char) => domPairCharNames.includes(char.name));
     });
-    if (isDomPair) {
-      return false;
-    }
     const isConPair = conPairs.some((conPair) => {
-      const isConPairArr = conPair.chars.map((char) => char.name);
-      return paired.some((char) => isConPairArr.includes(char.name));
+      const conPairCharNames = conPair.chars.map((char) => char.name);
+      return paired.every((char) => conPairCharNames.includes(char.name));
     });
-    if (isConPair) {
+    const isAltPair = altPairs.some((altPair) => {
+      const altPairCharNames = altPair.chars.map((char) => char.name);
+      return paired.every((char) => altPairCharNames.includes(char.name));
+    });
+
+    if (isAltPair || isConPair || isDomPair) {
       return false;
     }
     return true;
   });
+
   const independentDynamicsPair = independentPairs.map((independentPair) => {
     return { chars: independentPair, dynamicType: "independent" };
   });
+  console.log(
+    "calculateEpisodeIndependence -> independentDynamicsPair",
+    independentDynamicsPair
+  );
   return independentDynamicsPair;
 }
 
@@ -171,6 +218,9 @@ const calculateEpisodeAlternativity = (
   chars: string[],
   scenes: Scene[]
 ): DynamicPair[] => {
+  if (!chars || !scenes) {
+    return null;
+  }
   const epChars = getCharacterSignatures(chars, scenes);
   console.log("epChars", epChars);
   const pairs = pair(epChars);
@@ -178,7 +228,11 @@ const calculateEpisodeAlternativity = (
   const alternatePairs = pairs.filter((paired) => {
     const a = paired[0].scenes;
     const b = paired[1].scenes;
-    return a.every((ae) => !b.some((be) => ae.title === be.title));
+    const noCommonScenes = a.every(
+      (ae) => !b.some((be) => ae.title === be.title)
+    );
+    const isComplementary = a.length + b.length === scenes.length;
+    return noCommonScenes && isComplementary;
   });
   console.log("alternatePairs", alternatePairs);
   const alternatingDynamicsPair = alternatePairs.map((alternatePair) => {

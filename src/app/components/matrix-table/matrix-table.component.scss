@@ -8,10 +8,11 @@ th.rotate {
 
 th.rotate > div {
   transform: 
-      /* Magic Numbers */ translate(25px, 51px)
+      /* Magic Numbers */ translate(16px, 50px)
     /* 45 is really 360 - 45 */ rotate(315deg);
   width: 30px;
 }
+
 th.rotate > div > span {
   color: $button-color;
   border-bottom: 1px solid #ccc;
@@ -20,4 +21,22 @@ th.rotate > div > span {
 
 .row-header {
   color: $button-color;
+}
+
+tr {
+  border-bottom: 1px solid;
+}
+
+td {
+  text-align: center;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+table {
+  margin: auto;
+}
+
+.matrix-table-container {
+  padding: 80px;
 }

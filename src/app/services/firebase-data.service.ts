@@ -47,6 +47,7 @@ export class FirebaseDataService {
       this.isLoading$.next(false);
     });
     this.selectedEpisode$.subscribe((episode) => {
+      this.selectedChars$.next(null);
       this.chars$.next(null);
       this.chars$.next(episode.chars);
       this.charsCount$.next(this.countAndSliceAndSortChars(episode.chars));

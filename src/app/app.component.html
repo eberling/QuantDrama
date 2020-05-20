@@ -9,11 +9,11 @@
         [formGroup]="form"
         class="App--form mx-auto table justify-center text-center lg:text-left text-white pl-3"
       >
-        <label class="">Choose Mode: </label>
+        <!-- <label class="">Choose Mode: </label>
         <div class="my-1 flex justify-center">
           <button
             [class.selected]="this.dataService.seasonMode$ | async"
-            (click)="this.dataService.seasonMode$.next(true)"
+            (click)="onModeSelect(true)"
             class="text-center rounded-r-none"
           >
             Season
@@ -23,12 +23,12 @@
               !(this.dataService.seasonMode$ | async) &&
               (this.dataService.seasonMode$ | async) !== null
             "
-            (click)="this.dataService.seasonMode$.next(false)"
+            (click)="onModeSelect(false)"
             class="text-center rounded-l-none"
           >
             Episode
           </button>
-        </div>
+        </div> -->
         <ng-container *ngIf="(this.dataService.seasonMode$ | async) !== null">
           <label class="">Choose a Season:</label>
           <div class="select-container flex my-1 justify-center">
@@ -89,7 +89,7 @@
           </div>
         </ng-container>
         <ng-container *ngIf="!_isEmpty(form.get('chars').value)">
-          <label> Choose Characters:</label>
+          <label>Choose Characters:</label>
           <div class="grid grid-cols-2 p-2">
             <label
               class="button char--buttons text-center"
@@ -132,43 +132,8 @@
           </button>
         </ng-container>
       </form>
-      <div class="mx-auto">
-        <app-graph></app-graph>
-      </div>
-      <!-- <ngx-graph
-          class="chart-container"
-          [view]="[500, 200]"
-          [links]="[
-            {
-              id: 'a',
-              source: 'first',
-              target: 'second',
-              label: 'is parent of'
-            },
-            {
-              id: 'b',
-              source: 'first',
-              target: 'third',
-              label: 'custom label'
-            }
-          ]"
-          [nodes]="[
-            {
-              id: 'first',
-              label: 'A'
-            },
-            {
-              id: 'second',
-              label: 'B'
-            },
-            {
-              id: 'third',
-              label: 'C'
-            }
-          ]"
-        >
-        </ngx-graph> -->
-      <!-- <app-matrix-table></app-matrix-table> -->
+      <app-graph></app-graph>
     </div>
   </div>
+  <app-matrix-table></app-matrix-table>
 </div>

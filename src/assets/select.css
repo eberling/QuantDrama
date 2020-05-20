@@ -20,13 +20,16 @@ select {
   position: absolute;
   pointer-events: none;
 }
-.select-container:after {
+/* .select-container:after {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   top: 0.3em;
   right: 0.75em;
   border-top: 8px solid black;
   opacity: 0.5;
+} */
+.select-container:after {
+  display: none;
 }
 select::-ms-expand {
   display: none;

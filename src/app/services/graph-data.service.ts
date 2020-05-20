@@ -1,22 +1,19 @@
 import {
   Char,
   Scene,
-  EpisodeChar,
   DynamicPair,
+  Episode,
+  EpisodeChar,
 } from "src/analysis/interface-show";
-import { map, withLatestFrom } from "rxjs/operators";
-import { Subject, Observable, combineLatest, merge } from "rxjs";
+import { Subject, combineLatest, BehaviorSubject } from "rxjs";
 import { FirebaseDataService } from "./firebase-data.service";
 import { Injectable } from "@angular/core";
 import {
   calculateEpisodeAlternativity,
   calculateEpisodeIndependence,
-  calculateSceneDensity,
-  filterCharsFromEpisode,
-  getCharacterSignatures,
   calculateEpisodeConcomitance,
-  calculateEpisodeDensity,
   calculateEpisodeDominance,
+  getCharacterSignatures,
 } from "src/analysis/analysis";
 
 @Injectable({
@@ -33,9 +30,9 @@ export class GraphDataService {
   graphLinks$ = new Subject();
   graphNodes$ = new Subject();
 
-  constructor(private dataService: FirebaseDataService) {
-    const ds = this.dataService;
+  tableData$ = new BehaviorSubject(null);
 
+  constructor(private dataService: FirebaseDataService) {
     combineLatest(
       this.dataService.selectedChars$,
       this.dataService.selectedDynamics$,
@@ -44,6 +41,7 @@ export class GraphDataService {
       this.graphFormData = true;
       this.updateLinks(graphData[0], graphData[1], graphData[2]);
       this.updateNodes(graphData[0]);
+      this.updateEpChars(graphData[0], graphData[2]);
     });
   }
 
@@ -59,6 +57,9 @@ export class GraphDataService {
   }
 
   _buildGraphLinks(dynamicsPairs: DynamicPair[]) {
+    if (!dynamicsPairs) {
+      return null;
+    }
     return dynamicsPairs.map((dynamicPair) => {
       const id =
         dynamicPair.chars[0].name +
@@ -75,6 +76,13 @@ export class GraphDataService {
     });
   }
 
+  updateEpChars(chars, episode: Episode) {
+    const epChars: EpisodeChar[] = getCharacterSignatures(
+      chars,
+      episode.scenes
+    );
+    this.tableData$.next({ epChars, episode });
+  }
   updateLinks(chars, dynamics, episode) {
     if (!this.graphFormData) {
       this.graphLinks$.next([
@@ -115,23 +123,28 @@ export class GraphDataService {
     }
     // with passed function names retrieve callable functions from all functions object
     const dynamicFunctions = this._getDynamicFunctions(dynamics);
-    console.log(
-      "AnalysisService -> prepareLinks -> dynamicFunctions",
-      dynamicFunctions
-    );
     // call each selected function, generating edges
-
-    const graphLinks = dynamicFunctions.map((callableDynamicFn) => {
+    let graphLinks = dynamicFunctions.map((callableDynamicFn) => {
       const dynamicsPairs = callableDynamicFn(chars, episode.scenes);
       return this._buildGraphLinks(dynamicsPairs);
-      // { id: 'a', source: 'first', target: 'second', label: 'is parent of' }
     });
-    console.log("graphlinks", graphLinks);
-    this.graphLinks$.next(graphLinks);
+    if (!graphLinks || graphLinks.length < 2 || !graphLinks[0]) {
+      this.graphLinks$.next([]);
+    } else {
+      // Flatten all dynamicType Arrays to one Array
+      console.log(graphLinks, " WTF ");
+      const flattened = graphLinks.reduce((acc, curr) => acc.concat(curr));
+      this.graphLinks$.next(flattened);
+    }
   }
 
   updateNodes(chars) {
+    if (!chars) {
+      this.graphNodes$.next(null);
+      return;
+    }
     if (!this.graphFormData) {
+      // demo data
       this.graphNodes$.next([
         {
           id: "SISKO",
@@ -226,7 +239,6 @@ export class GraphDataService {
       ]);
       return;
     }
-    // const chars = this.graphFormData[0];
     const nodes = chars.map((char) => {
       const label = char.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
       return { id: char, label: label };
@@ -234,40 +246,4 @@ export class GraphDataService {
     console.log("prepareNodes", nodes);
     this.graphNodes$.next(nodes);
   }
-
-  update() {
-    // this.updateLinks();
-    // this.updateNodes();
-  }
-
-  // 0: (3) ["SISKO", "CREWMAN", "DEELA"]
-  // 1: ["dominance"]
-  // 2: {episodeNum: 4, title: "Cardassians", scenes: Array(23), chars: Array(19), season: 2}
-  // 3: Array(26)
-  // 0: {scenes: Array(23), chars: Array(19), season: 2, episodeNum: 0, title: "The Homecoming"}
-  // 1: {episodeNum: 1, title: "The Circle", scenes: Array(25), chars: Array(22), season: 2}
-  // 2: {title: "The Siege", scenes: Array(44), chars: Array(23), season: 2, episodeNum: 2}
-  // 3: {title: "Invasive Procedures", scenes: Array(24), chars: Array(11), season: 2, episodeNum: 3}
-  // 4: {episodeNum: 4, title: "Cardassians", scenes: Array(23), chars: Array(19), season: 2}
-  // 5: {scenes: Array(43), chars: Array(13), season: 2, episodeNum: 5, title: "Melora"}
-  // 6: {scenes: Array(23), chars: Array(16), season: 2, episodeNum: 6, title: "Rules of Acquisition"}
-  // 7: {scenes: Array(19), chars: Array(14), season: 2, episodeNum: 7, title: "Necessary Evil"}
-  // 8: {scenes: Array(22), chars: Array(13), season: 2, episodeNum: 8, title: "Second Sight"}
-  // 9: {title: "Sanctuary", scenes: Array(25), chars: Array(21), season: 2, episodeNum: 9}
-  // 10: {scenes: Array(37), chars: Array(14), season: 2, episodeNum: 10, title: "Rivals"}
-  // 11: {scenes: Array(36), chars: Array(12), season: 2, episodeNum: 11, title: "The Alternate"}
-  // 12: {scenes: Array(22), chars: Array(12), season: 2, episodeNum: 12, title: "Armageddon Game"}
-  // 13: {scenes: Array(32), chars: Array(17), season: 2, episodeNum: 13, title: "Whispers"}
-  // 14: {title: "Paradise", scenes: Array(22), chars: Array(10), season: 2, episodeNum: 14}
-  // 15: {chars: Array(14), season: 2, episodeNum: 15, title: "Shadowplay", scenes: Array(22)}
-  // 16: {chars: Array(14), season: 2, episodeNum: 16, title: "Playing God", scenes: Array(35)}
-  // 17: {title: "Profit and Loss", scenes: Array(19), chars: Array(12), season: 2, episodeNum: 17}
-  // 18: {chars: Array(12), season: 2, episodeNum: 18, title: "Blood Oath", scenes: Array(21)}
-  // 19: {title: "The Maquis, part 1", scenes: Array(22), chars: Array(20), season: 2, episodeNum: 19}
-  // 20: {episodeNum: 20, title: "The Maquis part↵2", scenes: Array(35), chars: Array(16), season: 2}
-  // 21: {title: "The Wire", scenes: Array(21), chars: Array(12), season: 2, episodeNum: 21}
-  // 22: {scenes: Array(22), chars: Array(14), season: 2, episodeNum: 22, title: "Crossover"}
-  // 23: {chars: Array(14), season: 2, episodeNum: 23, title: "The Collaborator", scenes: Array(28)}
-  // 24: {chars: Array(15), season: 2, episodeNum: 24, title: "Tribunal", scenes: Array(21)}
-  // 25: {episodeNum: 25, title: "The Jem'Hadar", scenes: Array(40), chars: Array(15), season: 2}
 }

@@ -2,11 +2,10 @@ import { FormControl, FormGroup } from "@angular/forms";
 import { FormBuilder } from "@angular/forms";
 import { GraphDataService } from "./services/graph-data.service";
 import { FirebaseDataService } from "./services/firebase-data.service";
-import { Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 
 @Component({
   selector: "app-root",
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
   animations: [],
@@ -21,6 +20,7 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.onModeSelect(false);
     this.form = this.fb.group({
       chars: new FormGroup({}),
       dynamics: new FormGroup({}),
@@ -29,9 +29,11 @@ export class AppComponent implements OnInit {
   }
 
   initForms() {
+    // adds char buttons
     this.dataService.chars$.subscribe((chars) => {
       const checkboxes = <FormGroup>this.form.get("chars");
       if (chars === null && !this._isEmpty(checkboxes)) {
+        console.log("check 111");
         this.form.removeControl("chars");
         this.form.addControl("chars", new FormGroup({}));
       }
@@ -42,17 +44,13 @@ export class AppComponent implements OnInit {
       }
     });
 
+    // adds relationships buttons
     const dynamicsForm = <FormGroup>this.form.get("dynamics");
     this.graphDataService.dynamicsArray.forEach((dynamic) => {
       const dynamicName = Object.keys(dynamic)[0];
       console.log(dynamicName);
       const box = new FormControl(false);
       dynamicsForm.addControl(dynamicName, box);
-      // dynamicsForm
-      //   .get(dynamicName)
-      //   .valueChanges.subscribe((checked) =>
-      //     console.log({ [dynamicName]: checked })
-      //   );
     });
   }
 
@@ -67,12 +65,14 @@ export class AppComponent implements OnInit {
       .filter(([key, val]) => val)
       .map((e) => e[0]);
     this.dataService.selectedDynamics$.next(dyns);
-    this.graphDataService.update();
   }
 
   onSelectSeason(e) {
     this.dataService.episodes$.next(null);
     this.dataService.chars$.next(null);
+    this.dataService.selectedChars$.next(null);
+    this.graphDataService.tableData$.next(null);
+
     this.dataService.selectedSeason$.next(e.target.value);
   }
 
@@ -91,5 +91,14 @@ export class AppComponent implements OnInit {
     const d = dValues.some((d) => !!d);
     const c = cValues.some((c) => !!c);
     return d && c;
+  }
+
+  // if true, selects seasonMode
+  onModeSelect(val) {
+    this.dataService.episodes$.next(null);
+    this.dataService.chars$.next(null);
+    this.dataService.selectedChars$.next(null);
+    this.graphDataService.tableData$.next(null);
+    this.dataService.seasonMode$.next(val);
   }
 }

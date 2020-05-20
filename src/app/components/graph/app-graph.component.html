@@ -32,83 +32,81 @@
   ]"
 >
 </ngx-graph> -->
-<div
-  class="graph--container__size"
-  *ngIf="(links$ | async) && (nodes$ | async)"
->
-  <ngx-graph
-    [draggingEnabled]="true"
-    [panningEnabled]="true"
-    [enableZoom]="false"
-    [links]="links$ | async"
-    [nodes]="nodes$ | async"
-    layout="colaForceDirected"
-    autoCenter="true"
-    [update$]="update$"
-    [center$]="center$"
-    [zoomToFit$]="zoomToFit$"
-  >
-    <ng-template #defsTemplate>
-      <svg:marker
-        id="arrow"
-        viewBox="0 -5 10 10"
-        refX="8"
-        refY="0"
-        markerWidth="4"
-        markerHeight="4"
-        orient="auto"
-        fill="white"
-      >
-        <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
-      </svg:marker>
-    </ng-template>
-
-    <ng-template #nodeTemplate let-node>
-      <svg:g class="node">
-        <svg:rect
-          rx="5"
-          [attr.width]="node.dimension.width"
-          [attr.height]="node.dimension.height"
-          [attr.fill]="node.data.color"
-        />
-        <svg:text
-          alignment-baseline="central"
-          [attr.x]="10"
-          [attr.y]="node.dimension.height / 2"
+<div class="mx-auto">
+  <div class="graph--container__size" *ngIf="nodes && links">
+    <ngx-graph
+      [draggingEnabled]="true"
+      [panningEnabled]="true"
+      [enableZoom]="false"
+      [links]="links"
+      [nodes]="nodes"
+      layout="colaForceDirected"
+      autoCenter="true"
+      [update$]="update$"
+      [zoomToFit$]="zoomToFit$"
+    >
+      <ng-template #defsTemplate>
+        <svg:marker
+          id="arrow"
+          viewBox="0 -5 10 10"
+          refX="8"
+          refY="0"
+          markerWidth="4"
+          markerHeight="4"
+          orient="auto"
+          fill="white"
         >
-          {{ node.label }}
-        </svg:text>
-      </svg:g>
-    </ng-template>
+          <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+        </svg:marker>
+      </ng-template>
 
-    <ng-template #linkTemplate let-link>
-      <svg:g class="edge">
-        <svg:path
-          *ngIf="link.label === 'dominated by'; else undirected"
-          class="line"
-          stroke-width="3"
-          marker-end="url(#arrow)"
-        ></svg:path>
+      <ng-template #nodeTemplate let-node>
+        <svg:g class="node">
+          <svg:rect
+            rx="5"
+            [attr.width]="node.dimension.width"
+            [attr.height]="node.dimension.height"
+            [attr.fill]="node.data.color"
+          />
+          <svg:text
+            alignment-baseline="central"
+            [attr.x]="10"
+            [attr.y]="node.dimension.height / 2"
+          >
+            {{ node.label }}
+          </svg:text>
+        </svg:g>
+      </ng-template>
 
-        <ng-template #undirected>
+      <ng-template #linkTemplate let-link>
+        <svg:g class="edge">
           <svg:path
-            *ngIf="link.id !== 'dominated by'"
+            *ngIf="link.label === 'dominates'; else undirected"
             class="line"
             stroke-width="3"
+            marker-end="url(#arrow)"
           ></svg:path>
-        </ng-template>
 
-        <svg:text class="edge-label" text-anchor="middle">
-          <textPath
-            class="text-path"
-            [attr.href]="'#' + link.id"
-            [style.dominant-baseline]="link.dominantBaseline"
-            startOffset="50%"
-          >
-            {{ link.label }}
-          </textPath>
-        </svg:text>
-      </svg:g>
-    </ng-template>
-  </ngx-graph>
+          <ng-template #undirected>
+            <svg:path
+              *ngIf="link.id !== 'dominates'"
+              class="line"
+              stroke-width="3"
+            ></svg:path>
+          </ng-template>
+
+          <svg:text class="edge-label" text-anchor="middle">
+            <textPath
+              class="text-path"
+              [attr.href]="'#' + link.id"
+              [style.dominant-baseline]="link.dominantBaseline"
+              startOffset="50%"
+            >
+              {{ link.label }}
+            </textPath>
+          </svg:text>
+        </svg:g>
+      </ng-template>
+    </ngx-graph>
+  </div>
 </div>
