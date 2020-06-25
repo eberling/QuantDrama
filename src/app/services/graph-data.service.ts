@@ -5,7 +5,14 @@ import {
   Episode,
   EpisodeChar,
 } from "src/analysis/interface-show";
-import { Subject, combineLatest, BehaviorSubject } from "rxjs";
+import {
+  Subject,
+  combineLatest,
+  BehaviorSubject,
+  forkJoin,
+  of,
+  Observable,
+} from "rxjs";
 import { FirebaseDataService } from "./firebase-data.service";
 import { Injectable } from "@angular/core";
 import {
@@ -14,40 +21,157 @@ import {
   calculateEpisodeConcomitance,
   calculateEpisodeDominance,
   getCharacterSignatures,
+  calculateJaccard,
+  calculateEpisodeDensity,
 } from "src/analysis/analysis";
+import { map, switchMap, reduce } from "rxjs/operators";
 
 @Injectable({
   providedIn: "root",
 })
 export class GraphDataService {
   graphFormData;
+  episodeDensity;
+  showGraph = false;
+
   dynamicsArray = [
     { alternativity: calculateEpisodeAlternativity },
     { concomitance: calculateEpisodeConcomitance },
     { dominance: calculateEpisodeDominance },
     { independence: calculateEpisodeIndependence },
   ];
-  graphLinks$ = new Subject();
-  graphNodes$ = new Subject();
 
+  graphLinks$ = new BehaviorSubject(null);
+  graphNodes$ = new BehaviorSubject(null);
   tableData$ = new BehaviorSubject(null);
 
+  allGraphData = combineLatest(
+    this.dataService.selectedChars$,
+    this.dataService.selectedDynamics$,
+    this.dataService.selectedEpisode$
+  );
+
   constructor(private dataService: FirebaseDataService) {
-    combineLatest(
-      this.dataService.selectedChars$,
-      this.dataService.selectedDynamics$,
-      this.dataService.selectedEpisode$
-    ).subscribe((graphData) => {
-      this.graphFormData = true;
-      this.updateLinks(graphData[0], graphData[1], graphData[2]);
-      this.updateNodes(graphData[0]);
-      this.updateEpChars(graphData[0], graphData[2]);
+    this.allGraphData.subscribe(([chars, dynamics, episode]) => {
+      if (this.showGraph) {
+        this.graphFormData = true;
+        this.updateLinks(chars, dynamics, episode);
+        this.updateNodes(chars);
+      }
+      this.updateEpCharsForMatrix(chars, episode);
+    });
+
+    this.dataService.selectedEpisode$.subscribe((episode) => {
+      this.episodeDensity = calculateEpisodeDensity(
+        episode.chars,
+        episode.scenes
+      );
+    });
+  }
+
+  countDominations() {
+    let final = [1, 2, 3, 4, 5, 6, 7].map((num) => {
+      return this.dataService.getEpisodes$(num).pipe(
+        map((episodes: Episode[]) => {
+          let someArray = [];
+          episodes.forEach((episode) => {
+            const dynamicFunctions = this._getDynamicFunctions([
+              "alternativity",
+              "concomitance",
+              "dominance",
+            ]);
+            // call each selected function, generating edges
+            let graphLinks = dynamicFunctions.map((callableDynamicFn) => {
+              const dynamicsPairs = callableDynamicFn(
+                [
+                  "QUARK",
+                  "BASHIR",
+                  "ODO",
+                  "SISKO",
+                  "JAKE",
+                  "DAX",
+                  "O'BRIEN",
+                  "KIRA",
+                ],
+                episode.scenes
+              );
+              return this._buildGraphLinks(dynamicsPairs);
+            });
+            someArray.push(graphLinks);
+          });
+          const domsFlat = someArray
+            .map((arr) => {
+              return arr[1];
+            })
+            .reduce((acc, curr) => acc.concat(curr));
+          let domCount = {};
+          domsFlat.forEach((dom) => {
+            if (domCount[dom.source]) {
+              domCount[dom.source] += 1;
+            } else {
+              domCount[dom.source] = 1;
+            }
+          });
+          console.log("yes", domCount);
+          return domCount;
+        })
+      );
+    });
+    forkJoin(final).subscribe((check) => {
+      console.log("All Dominations counted:", check);
+    });
+  }
+
+  calcJaccard() {
+    let final = [1, 2, 3, 4, 5, 6, 7].map((num) => {
+      return this.dataService.getEpisodes$(num).pipe(
+        map((episodes: Episode[]) => {
+          return episodes
+            .map((episode) => {
+              return calculateJaccard(episode.chars, episode.scenes);
+            })
+            .sort()
+            .filter((array) => array.length > 0);
+        })
+      );
+    });
+
+    forkJoin(final).subscribe((seasons) => {
+      console.log("THIS IS IT GUYS ", seasons);
+      const pairs = seasons.map((season) =>
+        season.map((episodes) => episodes.map((episode) => episode.pair))
+      );
+      console.log("just the pairs", pairs);
+    });
+  }
+
+  calcAllUniqueChars() {
+    let nums = of(1, 2, 3, 4, 5, 6, 7);
+    let seasons = nums.pipe(
+      switchMap(
+        (num) => <Observable<Episode[]>>this.dataService.getEpisodes$(num)
+      )
+    );
+    const arrayOfEpisodeChars = seasons.pipe(
+      map((season) => {
+        return season.map((episode) => {
+          return episode.chars.map((char) => char.trim());
+        });
+      })
+    );
+    const flattenedCharsPerSeason = arrayOfEpisodeChars.pipe(
+      reduce((acc, curr) => acc.concat(curr)),
+      reduce((acc, curr) => acc.concat(curr))
+    );
+    arrayOfEpisodeChars.subscribe((chars) => {
+      const flatt = new Set(chars.reduce((acc, curr) => acc.concat(curr)));
+      console.log(flatt);
     });
   }
 
   _getDynamicFunctions(
     selectedDynamics
-  ): ((c: Char[], s: Scene[]) => DynamicPair[])[] {
+  ): ((c: Char[] | string[], s: Scene[]) => DynamicPair[])[] {
     return selectedDynamics.map((dynamicName) => {
       const fnObjects = this.dynamicsArray.find((d) =>
         Object.keys(d).includes(dynamicName)
@@ -57,6 +181,10 @@ export class GraphDataService {
   }
 
   _buildGraphLinks(dynamicsPairs: DynamicPair[]) {
+    console.log(
+      "GraphDataService -> _buildGraphLinks -> dynamicsPairs",
+      dynamicsPairs
+    );
     if (!dynamicsPairs) {
       return null;
     }
@@ -72,18 +200,24 @@ export class GraphDataService {
         target: dynamicPair.chars[1].name,
         label: dynamicPair.dynamicType,
       };
+      console.log(
+        "GraphDataService -> _buildGraphLinks -> graphLinkObject",
+        graphLinkObject
+      );
       return graphLinkObject;
     });
   }
 
-  updateEpChars(chars, episode: Episode) {
+  updateEpCharsForMatrix(chars, episode: Episode) {
     const epChars: EpisodeChar[] = getCharacterSignatures(
       chars,
       episode.scenes
     );
     this.tableData$.next({ epChars, episode });
   }
+
   updateLinks(chars, dynamics, episode) {
+    console.log("debug 1");
     if (!this.graphFormData) {
       this.graphLinks$.next([
         [
@@ -128,12 +262,14 @@ export class GraphDataService {
       const dynamicsPairs = callableDynamicFn(chars, episode.scenes);
       return this._buildGraphLinks(dynamicsPairs);
     });
-    if (!graphLinks || graphLinks.length < 2 || !graphLinks[0]) {
+    if (!graphLinks || !graphLinks[0]) {
+      console.log("debug 2", graphLinks);
       this.graphLinks$.next([]);
     } else {
       // Flatten all dynamicType Arrays to one Array
-      console.log(graphLinks, " WTF ");
       const flattened = graphLinks.reduce((acc, curr) => acc.concat(curr));
+      console.log("GraphDataService -> updateLinks -> graphLinks", graphLinks);
+      console.log("GraphDataService -> updateLinks -> flattened", flattened);
       this.graphLinks$.next(flattened);
     }
   }

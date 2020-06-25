@@ -32,18 +32,22 @@
   ]"
 >
 </ngx-graph> -->
-<div class="mx-auto">
-  <div class="graph--container__size" *ngIf="nodes && links">
+<div
+  class="relative pb-4 mx-auto border rounded-lg border-color-var"
+  *ngIf="this.graphDataService.graphNodes$ | async"
+>
+  <div class="" style="width: 465px; height: 500px;">
     <ngx-graph
       [draggingEnabled]="true"
       [panningEnabled]="true"
       [enableZoom]="false"
-      [links]="links"
-      [nodes]="nodes"
+      [links]="this.graphDataService.graphLinks$ | async"
+      [nodes]="this.graphDataService.graphNodes$ | async"
       layout="colaForceDirected"
       autoCenter="true"
       [update$]="update$"
       [zoomToFit$]="zoomToFit$"
+      [center$]="center$"
     >
       <ng-template #defsTemplate>
         <svg:marker
@@ -108,5 +112,14 @@
         </svg:g>
       </ng-template>
     </ngx-graph>
+    <a class="button dl-button" (click)="csvService.downloadGraphCSV()">
+      CSV
+    </a>
   </div>
+  <!-- <div class="block text-center bg-gray-700 md:hidden">
+    <button (click)="toggleGraph()" class="w-1 w-1/2 h-1/2">
+      <ng-container *ngIf="!graphVisible; else up">▼</ng-container>
+      <ng-template #up>▲</ng-template>
+    </button>
+  </div> -->
 </div>

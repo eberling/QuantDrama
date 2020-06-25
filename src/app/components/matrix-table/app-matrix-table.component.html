@@ -1,0 +1,37 @@
+<section *ngIf="chars" class="text-center">
+  <h1>Configuration Matrix</h1>
+  Density:
+  {{ graphDataService.episodeDensity }}
+  this is a configuration matrix where stuff mean some
+  <div class="relative border rounded-lg border-color-var margin-3">
+    <a class="button dl-button" (click)="csvService.downloadMatrixCSV()">
+      CSV
+    </a>
+    <div class="overflow-x-scroll matrix-table-container">
+      <table class="table table-header-rotated">
+        <thead>
+          <tr>
+            <!-- First column header is not rotated -->
+            <th></th>
+            <!-- Following headers are rotated -->
+            <th *ngFor="let scene of scenes; index as i" class="rotate">
+              <div>
+                <span>{{ i + 1 }}. {{ scene.title }}</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let char of chars">
+            <th class="row-header">
+              <span>{{ char.name }}</span>
+            </th>
+            <td *ngFor="let scene of scenes">
+              {{ scene.chars.includes(char.name) ? "X" : "" }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

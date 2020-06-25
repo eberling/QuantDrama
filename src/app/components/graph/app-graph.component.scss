@@ -1,8 +1,24 @@
-.graph--container__size {
-  height: 500px;
-  min-width: 500px;
+// .graph--container__size {
+//   height: 100%;
+//   width: 100%;
+// }
+
+// .h-350px {
+//   height: 350px;
+// }
+@import "./../../../assets/variables.scss";
+
+:host {
+  padding-bottom: 1rem;
 }
 
+.h-500px {
+  height: 500px;
+}
+
+.border-color-var {
+  border-color: darken($button-color, 20%);
+}
 .line {
   stroke: white !important;
 }
@@ -13,4 +29,18 @@
 
 .edge text {
   fill: white !important;
+}
+
+// @media (min-width: 768px) {
+//   .graph--container__size__responsive {
+//     min-width: 450px;
+//     max-width: 500px;
+//   }
+// }
+
+.dl-button {
+  top: 0px;
+  border-radius: 6px;
+  left: 0px;
+  width: 56px;
 }

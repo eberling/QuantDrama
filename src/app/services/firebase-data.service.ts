@@ -21,6 +21,8 @@ export class FirebaseDataService {
   graphData$: Subject<any>;
   graphFormData$: Observable<any>;
 
+  episodeDensity: number;
+
   seasonMode$ = new BehaviorSubject(null);
   isLoading$ = new BehaviorSubject(false);
 

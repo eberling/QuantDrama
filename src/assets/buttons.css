@@ -148,3 +148,23 @@ input:not([type="submit"]) {
   padding: 1em 0.5em;
   width: 100%;
 }
+
+/* customizations for this app */
+.dl-button {
+  border-radius: 2px 8px 8px 2px;
+  padding: 5px 8px 5px 4px;
+  font-size: 10px;
+  position: absolute;
+  right: 25px;
+  top: 0px;
+  z-index: 100;
+}
+
+.dl-button::before {
+  content: url(./../assets/download.svg);
+  width: 14px;
+  float: left;
+  margin-right: 5px;
+  margin-top: -2px;
+  height: 10px;
+}

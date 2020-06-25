@@ -103,7 +103,15 @@ function calculateEpisodeDominance(
     const b = paired[1].scenes;
     if (a.length > b.length) {
       if (
-        b.every((bscene) => a.some((ascene) => ascene.title === bscene.title))
+        b.every((bscene) =>
+          a.some((ascene) => {
+            const bool =
+              ascene.title === bscene.title &&
+              ascene.sceneNum === bscene.sceneNum;
+            console.log(ascene, " a", bscene, " b");
+            return bool;
+          })
+        )
       ) {
         dominations.push({
           chars: [paired[0], paired[1]],
@@ -112,7 +120,13 @@ function calculateEpisodeDominance(
       }
     } else if (b.length > a.length) {
       if (
-        a.every((ascene) => b.some((bscene) => ascene.title === bscene.title))
+        a.every((ascene) =>
+          b.some(
+            (bscene) =>
+              ascene.title === bscene.title &&
+              ascene.sceneNum === bscene.sceneNum
+          )
+        )
       ) {
         dominations.push({
           chars: [paired[1], paired[0]],
@@ -229,10 +243,11 @@ const calculateEpisodeAlternativity = (
     const a = paired[0].scenes;
     const b = paired[1].scenes;
     const noCommonScenes = a.every(
-      (ae) => !b.some((be) => ae.title === be.title)
+      (ae) =>
+        !b.some((be) => ae.title === be.title && ae.sceneNum === be.sceneNum)
     );
-    const isComplementary = a.length + b.length === scenes.length;
-    return noCommonScenes && isComplementary;
+    // const isComplementary = a.length + b.length === scenes.length;
+    return noCommonScenes;
   });
   console.log("alternatePairs", alternatePairs);
   const alternatingDynamicsPair = alternatePairs.map((alternatePair) => {
@@ -245,6 +260,27 @@ const calculateEpisodeAlternativity = (
 
 // const calculateScenicDistance = (chars, episode) => {};
 
+const calculateJaccard = (chars, scenes) => {
+  const epChars = getCharacterSignatures(chars, scenes);
+  const paired = pair(epChars);
+  const jaccards = paired
+    .map((pair) => {
+      const a = pair[0].scenes;
+      const b = pair[1].scenes;
+      const intersect = a.filter((ascene) => {
+        return b.some((bscene) => {
+          return (
+            ascene.title === bscene.title && ascene.sceneNum === bscene.sceneNum
+          );
+        });
+      });
+      const sum = new Set(a.concat(b));
+      const jaccard = intersect.length / sum.size;
+      return { pair: pair, jaccard: jaccard, sum: sum, intersect: intersect };
+    })
+    .filter((object) => object.jaccard > 0.7 && object.jaccard < 1);
+  return jaccards;
+};
 export {
   calculateEpisodeAlternativity,
   // calculateComplementary,
@@ -255,4 +291,5 @@ export {
   calculateSceneDensity,
   filterCharsFromEpisode,
   getCharacterSignatures,
+  calculateJaccard,
 };

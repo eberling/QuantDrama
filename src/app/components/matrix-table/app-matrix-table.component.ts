@@ -1,22 +1,27 @@
+import { CsvDownloadService } from "./../../services/csv-download.service";
 import { Scene, Episode } from "src/analysis/interface-show";
-import { GraphDataService } from "./../../services/graph-data.service";
+import { GraphDataService } from "../../services/graph-data.service";
 import { Char, EpisodeChar } from "src/analysis/interface-show";
-import { FirebaseDataService } from "./../../services/firebase-data.service";
+import { FirebaseDataService } from "../../services/firebase-data.service";
 import { Component, OnInit } from "@angular/core";
 import { getCharacterSignatures } from "src/analysis/analysis";
 
 @Component({
   selector: "app-matrix-table",
-  templateUrl: "./matrix-table.component.html",
-  styleUrls: ["./matrix-table.component.scss"],
+  templateUrl: "./app-matrix-table.component.html",
+  styleUrls: ["./app-matrix-table.component.scss"],
 })
-export class MatrixTableComponent implements OnInit {
+export class AppMatrixTableComponent implements OnInit {
   chars: EpisodeChar[];
   scenes: Scene[];
   tableData;
   noData;
 
-  constructor(private graphDataService: GraphDataService) {}
+  constructor(
+    private graphDataService: GraphDataService,
+    private dataService: FirebaseDataService,
+    private csvService: CsvDownloadService
+  ) {}
 
   ngOnInit() {
     this.graphDataService.tableData$.subscribe(

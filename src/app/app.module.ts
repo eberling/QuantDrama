@@ -7,8 +7,18 @@ import { AppComponent } from "./app.component";
 import { NgxGraphModule } from "@swimlane/ngx-graph";
 import { AppGraphComponent } from "./components/graph/app-graph.component";
 import { fbConfig } from "../firebase/firebase-config.js";
-import { AngularFireModule, FirebaseOptionsToken } from "angularfire2";
-import { MatrixTableComponent } from "./components/matrix-table/matrix-table.component";
+import { AngularFireModule } from "angularfire2";
+import { AppMatrixTableComponent } from "./components/matrix-table/app-matrix-table.component";
+import { AppChartComponent } from "./components/chart/app-chart.component";
+import { NgxChartsModule } from "@swimlane/ngx-charts";
+import { SimplebarAngularModule } from "simplebar-angular";
+
+import { PerfectScrollbarModule } from "ngx-perfect-scrollbar";
+import { PerfectScrollbarConfigInterface } from "ngx-perfect-scrollbar";
+import { PERFECT_SCROLLBAR_CONFIG } from "ngx-perfect-scrollbar";
+const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
+  suppressScrollX: true,
+};
 
 @NgModule({
   imports: [
@@ -17,10 +27,24 @@ import { MatrixTableComponent } from "./components/matrix-table/matrix-table.com
     FormsModule,
     ReactiveFormsModule,
     NgxGraphModule,
+    NgxChartsModule,
     AngularFireModule.initializeApp(fbConfig),
+    PerfectScrollbarModule,
+    SimplebarAngularModule,
   ],
-  declarations: [AppComponent, AppGraphComponent, MatrixTableComponent],
+  declarations: [
+    AppComponent,
+    AppGraphComponent,
+    AppMatrixTableComponent,
+    AppChartComponent,
+  ],
   bootstrap: [AppComponent],
-  providers: [AngularFirestore],
+  providers: [
+    AngularFirestore,
+    {
+      provide: PERFECT_SCROLLBAR_CONFIG,
+      useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG,
+    },
+  ],
 })
 export class AppModule {}
