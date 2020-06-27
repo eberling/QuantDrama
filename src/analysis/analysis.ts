@@ -1,3 +1,4 @@
+import { Episode } from 'src/analysis/interface-show';
 import { Scene, EpisodeChar, DynamicPair } from "./interface-show";
 
 function filterCharsFromScene(filter: string[], scene: Scene): Scene {
@@ -108,7 +109,7 @@ function calculateEpisodeDominance(
             const bool =
               ascene.title === bscene.title &&
               ascene.sceneNum === bscene.sceneNum;
-            console.log(ascene, " a", bscene, " b");
+            // console.log(ascene, " a", bscene, " b");
             return bool;
           })
         )
@@ -135,8 +136,8 @@ function calculateEpisodeDominance(
       }
     }
   });
-  console.log("epChars", epChars);
-  console.log("dominations", dominations);
+  // console.log("epChars", epChars);
+  // console.log("dominations", dominations);
   return dominations;
 }
 
@@ -161,33 +162,6 @@ function getCharacterSignatures(
     return epChar;
   });
 }
-
-// const calculateEpisodeIndependence = (
-//   chars: string[],
-//   scenes: Scene[]
-// ): DynamicPair[] => {
-//   if (!chars || !scenes) {
-//     return null;
-//   }
-//   const epChars = getCharacterSignatures(chars, scenes);
-//   console.log("epChars", epChars);
-//   const pairs = pair(epChars);
-//   console.log("pairs", pairs);
-//   const independentPairs = pairs.filter((paired) => {
-//     const a = paired[0].scenes;
-//     const b = paired[1].scenes;
-//     const noCommonScenes = a.every(
-//       (ae) => !b.some((be) => ae.title === be.title)
-//     );
-//     const isComplementary = a.length + b.length === scenes.length;
-//     return noCommonScenes && !isComplementary;
-//   });
-//   console.log("independent", independentPairs);
-//   const independentDynamicsPair = independentPairs.map((independentPair) => {
-//     return { chars: independentPair, dynamicType: "independent" };
-//   });
-//   return independentDynamicsPair;
-// };
 
 // weder konkomitant, noch dominant, speziallfall=> alternativ
 function calculateEpisodeIndependence(chars: string[], scenes: Scene[]) {
@@ -249,16 +223,12 @@ const calculateEpisodeAlternativity = (
     // const isComplementary = a.length + b.length === scenes.length;
     return noCommonScenes;
   });
-  console.log("alternatePairs", alternatePairs);
+  // console.log("alternatePairs", alternatePairs);
   const alternatingDynamicsPair = alternatePairs.map((alternatePair) => {
     return { chars: alternatePair, dynamicType: "alternative" };
   });
   return alternatingDynamicsPair;
 };
-
-// const calculateComplementary = (chars, episode) => {};
-
-// const calculateScenicDistance = (chars, episode) => {};
 
 const calculateJaccard = (chars, scenes) => {
   const epChars = getCharacterSignatures(chars, scenes);
@@ -281,7 +251,78 @@ const calculateJaccard = (chars, scenes) => {
     .filter((object) => object.jaccard > 0.7 && object.jaccard < 1);
   return jaccards;
 };
+
+
+  // gibt es konfigurationen zwischen charakteren, die immer wiederkehren?
+  // Focus on 
+  // Each episode:
+  // ['BASHIR', 'SISKO', 'KIRA', 'ODO', "O'BRIEN", 'QUARK', 'DAX', 'WORF', 'JAKE', 'COMPUTER', 'NOG', 'GARAK']
+  //  pair all, generate all dynamics, and visualize for each season:
+  //  season 1 : 
+  //   10 most common relationships:[{A, B , type, }, {episodes: [1,2,3]}]
+
+  //   pair all, generate all hemming distances and visualize for each season:
+
+function getAllDynamicsForEpisode(episode:Episode): ({chars: string[]; dynamicType: String; }[]) {
+  const chars = ['BASHIR', 'SISKO', 'KIRA', 'ODO', "O'BRIEN", 'QUARK', 'DAX', 'WORF', 'JAKE', 'COMPUTER', 'NOG', 'GARAK']
+  const alts = calculateEpisodeAlternativity(chars, episode.scenes);
+  const doms = calculateEpisodeDominance(chars , episode.scenes);
+  const cons = calculateEpisodeConcomitance(chars, episode.scenes);
+  const all = alts.concat(doms,cons)
+  // for later comparison between different seasons, scene needs to be removed
+  const noScenes = all.map(dynPair => {
+    return {
+      chars: [dynPair.chars[0].name , dynPair.chars[1].name],
+      dynamicType: dynPair.dynamicType
+    }
+  })
+  return noScenes;
+}
+
+// function sumAllDynamicsForSeason(episodes: Episode[]) {
+//   episodes.map(episode => {
+//     const episodeDyns =  getAllDynamicsForEpisode(episode);
+//       let countedDyns: {chars: string[], dynamicType: string, episode: Episode[]} = [];
+//       episodeDyns.map((epDyn) => {
+//         if (countedDyns.some(epDynC => arraysEqual(epDynC.chars, epDyn.chars) && epDynC.dynamicType === epDyn.dynamicType)) {
+//           countedDyns[epDyn.chars.toString() + epDyn.dynamicType].episode.push(episode);
+//         } else {
+//           countedDyns[epDyn.chars.toString() + epDyn.dynamicType] = 
+//         }
+//       })
+//         for (let i = 0; i < episodeDyns.length; ++i) {
+//           if (!result.some()]) {
+//             result[episodeDyns[i]] = 0;
+//           }
+//           ++result[episodeDyns[i]];
+//         }
+//     })
+// }
+
+
+function sumAllDynamicsForSeason(episodes: Episode[]) {
+  let countedDyns: Map<string, Episode[]> = new Map();
+  episodes.map(episode => {
+    const episodeDyns =  getAllDynamicsForEpisode(episode);
+    // console.log('sumAllDynamicsForSeason -> episodeDyns', episodeDyns)
+      episodeDyns.map((epDyn) => {
+        if (countedDyns.has(JSON.stringify(epDyn))) {
+          console.log('sumAllDynamicsForSeason -> countedDyns.has(epDyn)', countedDyns.has(JSON.stringify(epDyn)))
+          countedDyns.get(JSON.stringify(epDyn)).push(episode)
+          console.log("it has pushed", countedDyns.get(JSON.stringify(epDyn)));
+        } else {
+          countedDyns.set(JSON.stringify(epDyn), [episode]);
+          console.log('sumAllDynamicsForSeason -> set', countedDyns.has(JSON.stringify(epDyn)));
+        }
+      })
+  })
+  return countedDyns;
+}
+
+
+
 export {
+  sumAllDynamicsForSeason,
   calculateEpisodeAlternativity,
   // calculateComplementary,
   calculateEpisodeConcomitance,

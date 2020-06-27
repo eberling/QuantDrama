@@ -24,7 +24,19 @@ import {
   calculateJaccard,
   calculateEpisodeDensity,
 } from "src/analysis/analysis";
-import { map, switchMap, reduce } from "rxjs/operators";
+import {
+  map,
+  switchMap,
+  reduce,
+  concatMap,
+  flatMap,
+  mergeMap,
+  mergeMapTo,
+  concatAll,
+  toArray,
+  tap,
+  mergeAll,
+} from "rxjs/operators";
 
 @Injectable({
   providedIn: "root",
@@ -145,28 +157,73 @@ export class GraphDataService {
     });
   }
 
-  calcAllUniqueChars() {
+  getAllUniqueChars() {
     let nums = of(1, 2, 3, 4, 5, 6, 7);
     let seasons = nums.pipe(
-      switchMap(
+      concatMap(
         (num) => <Observable<Episode[]>>this.dataService.getEpisodes$(num)
-      )
+      ),
+      toArray()
     );
-    const arrayOfEpisodeChars = seasons.pipe(
-      map((season) => {
-        return season.map((episode) => {
-          return episode.chars.map((char) => char.trim());
+    const arrayOfSeasonsOfEpisodesOfChars = seasons.pipe(
+      map((seasons) => {
+        return seasons.map((season) => {
+          return season.map((episode) => {
+            return episode.chars.map((char) => char.trim());
+          });
         });
       })
     );
-    const flattenedCharsPerSeason = arrayOfEpisodeChars.pipe(
-      reduce((acc, curr) => acc.concat(curr)),
-      reduce((acc, curr) => acc.concat(curr))
+    const flattenedChars = arrayOfSeasonsOfEpisodesOfChars.pipe(
+      map((tripleNested) =>
+        tripleNested
+          .reduce((acc, curr) => acc.concat(curr))
+          .reduce((acc, curr) => acc.concat(curr))
+      ),
     );
-    arrayOfEpisodeChars.subscribe((chars) => {
-      const flatt = new Set(chars.reduce((acc, curr) => acc.concat(curr)));
+    flattenedChars.subscribe((chars) => {
+      const flatt = new Set(chars);
       console.log(flatt);
     });
+  }
+
+  getAllUniqueCharsAndCount(): Observable<any[]> {
+    let nums = of(1, 2, 3, 4, 5, 6, 7);
+    let seasons = nums.pipe(
+      concatMap(
+        (num) => <Observable<Episode[]>>this.dataService.getEpisodes$(num)
+      ),
+      toArray()
+    );
+    const arrayOfSeasonsOfEpisodesOfChars = seasons.pipe(
+      map((seasons) => {
+        return seasons.map((season) => {
+          return season.map((episode) => {
+            return episode.chars.map((char) => char.trim());
+          });
+        });
+      })
+    );
+    const flattenedChars = arrayOfSeasonsOfEpisodesOfChars.pipe(
+      map((tripleNested) =>
+        tripleNested
+          .reduce((acc, curr) => acc.concat(curr))
+          .reduce((acc, curr) => acc.concat(curr))
+      ),
+    );
+    const counted = flattenedChars.pipe(
+      map((chars) => {
+        let result: any = {};
+        for (let i = 0; i < chars.length; ++i) {
+          if (!result[chars[i]]) {
+            result[chars[i]] = 0;
+          }
+          ++result[chars[i]];
+        }
+        return result;
+      })
+    );
+    return counted;
   }
 
   _getDynamicFunctions(
