@@ -149,18 +149,16 @@ export class GraphDataService {
     });
 
     forkJoin(final).subscribe((seasons) => {
-      console.log("THIS IS IT GUYS ", seasons);
       const pairs = seasons.map((season) =>
         season.map((episodes) => episodes.map((episode) => episode.pair))
       );
-      console.log("just the pairs", pairs);
     });
   }
 
   getAllUniqueChars() {
     let nums = of(1, 2, 3, 4, 5, 6, 7);
     let seasons = nums.pipe(
-      concatMap(
+      mergeMap(
         (num) => <Observable<Episode[]>>this.dataService.getEpisodes$(num)
       ),
       toArray()
@@ -179,7 +177,7 @@ export class GraphDataService {
         tripleNested
           .reduce((acc, curr) => acc.concat(curr))
           .reduce((acc, curr) => acc.concat(curr))
-      ),
+      )
     );
     flattenedChars.subscribe((chars) => {
       const flatt = new Set(chars);
@@ -209,7 +207,7 @@ export class GraphDataService {
         tripleNested
           .reduce((acc, curr) => acc.concat(curr))
           .reduce((acc, curr) => acc.concat(curr))
-      ),
+      )
     );
     const counted = flattenedChars.pipe(
       map((chars) => {

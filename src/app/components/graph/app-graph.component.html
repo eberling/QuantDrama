@@ -36,7 +36,7 @@
   class="relative pb-4 mx-auto border rounded-lg border-color-var"
   *ngIf="this.graphDataService.graphNodes$ | async"
 >
-  <div class="" style="width: 465px; height: 500px;">
+  <div class="overflow-hidden" style="width: 465px; height: 500px;">
     <ngx-graph
       [draggingEnabled]="true"
       [panningEnabled]="true"

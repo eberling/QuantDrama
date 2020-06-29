@@ -1,0 +1,20 @@
+<ng-container *ngIf="dynamicHammingChartData">
+  <ngx-charts-bar-vertical-2d
+    [view]="view"
+    [scheme]="colorScheme2"
+    [results]="dynamicHammingChartData"
+    [gradient]="gradient"
+    [xAxis]="showXAxis"
+    [yAxis]="showYAxis"
+    [legend]="showLegend"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+    [legendTitle]="'Legende'"
+    (select)="onSelect($event)"
+    (activate)="onActivate($event)"
+    (deactivate)="onDeactivate($event)"
+  >
+  </ngx-charts-bar-vertical-2d>
+</ng-container>

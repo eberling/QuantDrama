@@ -1,3 +1,4 @@
+import { AppDynamicChartComponent } from "./components/dynamic-chart/app-dynamic-chart.component";
 import { AngularFirestore } from "angularfire2/firestore";
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
@@ -16,6 +17,7 @@ import { SimplebarAngularModule } from "simplebar-angular";
 import { PerfectScrollbarModule } from "ngx-perfect-scrollbar";
 import { PerfectScrollbarConfigInterface } from "ngx-perfect-scrollbar";
 import { PERFECT_SCROLLBAR_CONFIG } from "ngx-perfect-scrollbar";
+import { AppHammingChartComponent } from "./components/hamming-chart/app-hamming-chart.component";
 const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
   suppressScrollX: true,
 };
@@ -37,6 +39,8 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     AppGraphComponent,
     AppMatrixTableComponent,
     AppChartComponent,
+    AppDynamicChartComponent,
+    AppHammingChartComponent,
   ],
   bootstrap: [AppComponent],
   providers: [

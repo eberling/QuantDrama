@@ -1,5 +1,20 @@
-import { Episode } from 'src/analysis/interface-show';
+import { Episode } from "src/analysis/interface-show";
 import { Scene, EpisodeChar, DynamicPair } from "./interface-show";
+
+const primaryChars = [
+  "BASHIR",
+  "SISKO",
+  "KIRA",
+  "ODO",
+  "O'BRIEN",
+  "QUARK",
+  "DAX",
+  "WORF",
+  "JAKE",
+  "COMPUTER",
+  "NOG",
+  "GARAK",
+];
 
 function filterCharsFromScene(filter: string[], scene: Scene): Scene {
   const sceneCpy = { ...scene };
@@ -103,17 +118,15 @@ function calculateEpisodeDominance(
     const a = paired[0].scenes;
     const b = paired[1].scenes;
     if (a.length > b.length) {
-      if (
-        b.every((bscene) =>
-          a.some((ascene) => {
-            const bool =
-              ascene.title === bscene.title &&
-              ascene.sceneNum === bscene.sceneNum;
-            // console.log(ascene, " a", bscene, " b");
-            return bool;
-          })
-        )
-      ) {
+      const areDominant = b.every((bscene) =>
+        a.some((ascene) => {
+          const bool =
+            ascene.title === bscene.title &&
+            ascene.sceneNum === bscene.sceneNum;
+          return bool;
+        })
+      );
+      if (areDominant) {
         dominations.push({
           chars: [paired[0], paired[1]],
           dynamicType: "dominates",
@@ -136,8 +149,6 @@ function calculateEpisodeDominance(
       }
     }
   });
-  // console.log("epChars", epChars);
-  // console.log("dominations", dominations);
   return dominations;
 }
 
@@ -148,19 +159,24 @@ function getCharacterSignatures(
   if (!chars || !scenes) {
     return null;
   }
-  return chars.map((char) => {
-    const sceneCache: Scene[] = [];
-    scenes.forEach((scene) => {
-      if (scene.chars.some((ch) => ch === char)) {
-        sceneCache.push(scene);
-      }
-    });
-    const epChar: EpisodeChar = {
-      name: char,
-      scenes: sceneCache,
-    };
-    return epChar;
-  });
+  const episodeChars = chars
+    .map((char) => {
+      let sceneTemp: Scene[] = [];
+      scenes.forEach((scene) => {
+        if (scene.chars.some((ch) => ch === char)) {
+          sceneTemp.push(scene);
+        }
+      });
+      const epChar: EpisodeChar = {
+        name: char,
+        scenes: sceneTemp,
+      };
+      return epChar;
+    })
+    .filter((epChar) => {
+      return epChar.scenes.length > 0;
+    }); // no nulls
+  return episodeChars;
 }
 
 // weder konkomitant, noch dominant, speziallfall=> alternativ
@@ -210,9 +226,7 @@ const calculateEpisodeAlternativity = (
     return null;
   }
   const epChars = getCharacterSignatures(chars, scenes);
-  console.log("epChars", epChars);
   const pairs = pair(epChars);
-  console.log("pairs", pairs);
   const alternatePairs = pairs.filter((paired) => {
     const a = paired[0].scenes;
     const b = paired[1].scenes;
@@ -233,10 +247,16 @@ const calculateEpisodeAlternativity = (
 const calculateJaccard = (chars, scenes) => {
   const epChars = getCharacterSignatures(chars, scenes);
   const paired = pair(epChars);
-  const jaccards = paired
+  const jaccards: {
+    pair: EpisodeChar[];
+    jaccard: number;
+    sum: Set<Scene>;
+    intersect: Scene[];
+  }[] = paired
     .map((pair) => {
       const a = pair[0].scenes;
       const b = pair[1].scenes;
+      // intersect is the number of scenes two characters have in common
       const intersect = a.filter((ascene) => {
         return b.some((bscene) => {
           return (
@@ -244,6 +264,7 @@ const calculateJaccard = (chars, scenes) => {
           );
         });
       });
+      // sum is the number of scenes both characters appear in
       const sum = new Set(a.concat(b));
       const jaccard = intersect.length / sum.size;
       return { pair: pair, jaccard: jaccard, sum: sum, intersect: intersect };
@@ -252,76 +273,221 @@ const calculateJaccard = (chars, scenes) => {
   return jaccards;
 };
 
+function getAllDynamicsForEpisode(
+  chars,
+  scenes
+): { chars: string[]; dynamicType: string }[] {
+  const alts = calculateEpisodeAlternativity(chars, scenes);
+  const doms = calculateEpisodeDominance(chars, scenes);
+  const cons = calculateEpisodeConcomitance(chars, scenes);
+  const all = alts.concat(doms, cons);
 
-  // gibt es konfigurationen zwischen charakteren, die immer wiederkehren?
-  // Focus on 
-  // Each episode:
-  // ['BASHIR', 'SISKO', 'KIRA', 'ODO', "O'BRIEN", 'QUARK', 'DAX', 'WORF', 'JAKE', 'COMPUTER', 'NOG', 'GARAK']
-  //  pair all, generate all dynamics, and visualize for each season:
-  //  season 1 : 
-  //   10 most common relationships:[{A, B , type, }, {episodes: [1,2,3]}]
-
-  //   pair all, generate all hemming distances and visualize for each season:
-
-function getAllDynamicsForEpisode(episode:Episode): ({chars: string[]; dynamicType: String; }[]) {
-  const chars = ['BASHIR', 'SISKO', 'KIRA', 'ODO', "O'BRIEN", 'QUARK', 'DAX', 'WORF', 'JAKE', 'COMPUTER', 'NOG', 'GARAK']
-  const alts = calculateEpisodeAlternativity(chars, episode.scenes);
-  const doms = calculateEpisodeDominance(chars , episode.scenes);
-  const cons = calculateEpisodeConcomitance(chars, episode.scenes);
-  const all = alts.concat(doms,cons)
   // for later comparison between different seasons, scene needs to be removed
-  const noScenes = all.map(dynPair => {
+  const noScenes = all.map((dynPair) => {
     return {
-      chars: [dynPair.chars[0].name , dynPair.chars[1].name],
-      dynamicType: dynPair.dynamicType
-    }
-  })
+      chars: [dynPair.chars[0].name, dynPair.chars[1].name],
+      dynamicType: dynPair.dynamicType,
+    };
+  });
   return noScenes;
 }
 
-// function sumAllDynamicsForSeason(episodes: Episode[]) {
-//   episodes.map(episode => {
-//     const episodeDyns =  getAllDynamicsForEpisode(episode);
-//       let countedDyns: {chars: string[], dynamicType: string, episode: Episode[]} = [];
-//       episodeDyns.map((epDyn) => {
-//         if (countedDyns.some(epDynC => arraysEqual(epDynC.chars, epDyn.chars) && epDynC.dynamicType === epDyn.dynamicType)) {
-//           countedDyns[epDyn.chars.toString() + epDyn.dynamicType].episode.push(episode);
-//         } else {
-//           countedDyns[epDyn.chars.toString() + epDyn.dynamicType] = 
-//         }
-//       })
-//         for (let i = 0; i < episodeDyns.length; ++i) {
-//           if (!result.some()]) {
-//             result[episodeDyns[i]] = 0;
-//           }
-//           ++result[episodeDyns[i]];
-//         }
-//     })
-// }
-
-
 function sumAllDynamicsForSeason(episodes: Episode[]) {
   let countedDyns: Map<string, Episode[]> = new Map();
-  episodes.map(episode => {
-    const episodeDyns =  getAllDynamicsForEpisode(episode);
-    // console.log('sumAllDynamicsForSeason -> episodeDyns', episodeDyns)
-      episodeDyns.map((epDyn) => {
-        if (countedDyns.has(JSON.stringify(epDyn))) {
-          console.log('sumAllDynamicsForSeason -> countedDyns.has(epDyn)', countedDyns.has(JSON.stringify(epDyn)))
-          countedDyns.get(JSON.stringify(epDyn)).push(episode)
-          console.log("it has pushed", countedDyns.get(JSON.stringify(epDyn)));
-        } else {
-          countedDyns.set(JSON.stringify(epDyn), [episode]);
-          console.log('sumAllDynamicsForSeason -> set', countedDyns.has(JSON.stringify(epDyn)));
-        }
-      })
-  })
+  episodes.map((episode) => {
+    const episodeDyns = getAllDynamicsForEpisode(primaryChars, episode.scenes);
+    episodeDyns.map((epDyn) => {
+      const key = JSON.stringify(epDyn);
+      if (countedDyns.has(key)) {
+        countedDyns.get(key).push(episode);
+      } else {
+        countedDyns.set(key, [episode]);
+      }
+    });
+  });
+  // console.log("sumAllDynamicsForSeason -> countedDyns", countedDyns);
   return countedDyns;
 }
 
+function mergeAllDynamicsMaps(maps: Map<string, Episode[]>[]) {
+  let merged: Map<string, Episode[]> = new Map();
 
+  maps.forEach((map) => {
+    map.forEach((value, key) => {
+      if (!merged.has(key)) {
+        merged.set(key, value);
+      } else {
+        const arr = merged.get(key).concat(value);
+        merged.set(key, arr);
+      }
+    });
+  });
+
+  // console.log("mergeAllDynamicsMaps -> merged", merged);
+  return merged;
+}
+
+const calculateHammingForSeason = (season: Episode[]) => {
+  const hammingDistancesInSeason = season.map((episode) => {
+    console.log(episode.episodeNum, episode.season);
+    const hammingDistancesInEpisode = calculateHammingInEpisode(
+      primaryChars,
+      episode.scenes
+    );
+    return { episode, hammingDistancesInEpisode };
+  });
+  return hammingDistancesInSeason;
+};
+
+const calculateHammingInEpisode = (
+  chars: string[] = primaryChars,
+  scenes: Scene[]
+) => {
+  const epChars = getCharacterSignatures(chars, scenes);
+  const paired = pair(epChars);
+  const hammings: {
+    pair: EpisodeChar[];
+    hamming: number;
+    totalLength: number;
+    relativeHamming: number;
+  }[] = paired.map((pair) => {
+    const a = pair[0].name;
+    const b = pair[1].name;
+
+    let hamming = 0;
+
+    scenes.forEach((scene) => {
+      const aInScene = scene.chars.includes(a);
+      const bInScene = scene.chars.includes(b);
+      if (!(aInScene === bInScene)) {
+        ++hamming;
+      }
+    });
+
+    // console.log("calculateHamming -> hamming", hamming, pair, scenes);
+
+    return {
+      pair: pair,
+      hamming: hamming,
+      totalLength: scenes.length,
+      relativeHamming: hamming / scenes.length,
+    };
+  });
+  return hammings;
+};
+
+const calculateHammingForPair = (
+  pair: string[] = primaryChars,
+  scenes: Scene[]
+): {
+  pair: string[];
+  hamming: number;
+  totalLength: number;
+  relativeHamming: number;
+} => {
+  const a = pair[0];
+  const b = pair[1];
+
+  let hamming = 0;
+
+  scenes.forEach((scene) => {
+    const aInScene = scene.chars.includes(a);
+    const bInScene = scene.chars.includes(b);
+    if (!(aInScene === bInScene)) {
+      ++hamming;
+    }
+  });
+
+  const hammingObject = {
+    pair: pair,
+    hamming: hamming,
+    totalLength: scenes.length,
+    relativeHamming: hamming / scenes.length,
+  };
+
+  return hammingObject;
+};
+
+function combineHammingWithTvShowDynamicsMap(
+  map: Map<string, Episode[]>,
+  hammings: {
+    episode: Episode;
+    hammingDistancesInEpisode: {
+      pair: EpisodeChar[];
+      hamming: number;
+      totalLength: number;
+      relativeHamming: number;
+    }[];
+  }[]
+) {
+  let finalArr: {
+    pair: string[];
+    dynamicType: string;
+    episodesWithHamming: {
+      episode: Episode;
+      hammingObject: {
+        hamming: number;
+        relativeHamming: number;
+      };
+    }[];
+    totalRelHamming: number;
+    totalAbsHamming: number;
+  }[] = [];
+
+  map.forEach((values, key) => {
+    // we are looking for frequent relationships that have a low relative hammingDistance;
+    // Add the hammingDistance To The Relationship
+    // Show the 50 most Frequent relationships. Sort them by lowest relative hamming distance;
+    // mapelement: two chars, the type, and the episodes it occurs in. get those episodes,
+    // generate hamming distances in those episodes between the characters of the key
+    // => average hamming distance for two characters
+    // => all the hamming distances added
+    const keyObject: { chars: string[]; dynamicType: string } = JSON.parse(key);
+    const pair = keyObject.chars;
+    const dynamic = keyObject.dynamicType;
+    const episodes = values;
+
+    let absHammingOfAllEpisodes = 0;
+    let relHammingOfAllEpisodes = 0;
+
+    let tempAllRelHammingsAdded = 0;
+    const episodesWithHamming = episodes.map((episode) => {
+      const hammingObject = calculateHammingForPair(pair, episode.scenes);
+      return {
+        episode: episode,
+        hammingObject: {
+          hamming: hammingObject.hamming,
+          relativeHamming: hammingObject.relativeHamming,
+        },
+      };
+    });
+
+    episodesWithHamming.forEach((episodeWithHamming) => {
+      // console.log("episodeWithHamming", episodeWithHamming);
+      absHammingOfAllEpisodes += episodeWithHamming.hammingObject.hamming;
+      tempAllRelHammingsAdded +=
+        episodeWithHamming.hammingObject.relativeHamming;
+    });
+
+    relHammingOfAllEpisodes =
+      tempAllRelHammingsAdded / episodesWithHamming.length;
+    finalArr.push({
+      pair: pair,
+      dynamicType: dynamic,
+      episodesWithHamming: episodesWithHamming,
+      totalAbsHamming: absHammingOfAllEpisodes,
+      totalRelHamming: relHammingOfAllEpisodes,
+    });
+  });
+  console.log("finalArr", finalArr);
+  return finalArr;
+}
 
 export {
+  combineHammingWithTvShowDynamicsMap,
+  calculateHammingInEpisode,
+  calculateHammingForSeason,
+  mergeAllDynamicsMaps,
   sumAllDynamicsForSeason,
   calculateEpisodeAlternativity,
   // calculateComplementary,

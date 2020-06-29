@@ -130,14 +130,16 @@ export class AppComponent implements OnInit, OnDestroy {
   //   this.dataService.seasonMode$.next(val);
   // }
 
-  _isDrawButtonActive() {
-    const dBoxes = this.form.get("dynamics").value;
+  _isCharactersSelected() {
     const cBoxes = this.form.get("chars").value;
-    const dValues = Object.values(dBoxes);
     const cValues = Object.values(cBoxes);
-    const d = dValues.some((d) => !!d);
-    const c = cValues.some((c) => !!c);
-    return d && c;
+    return cValues.some((c) => !!c);
+  }
+
+  _isDynamicsSelected() {
+    const dBoxes = this.form.get("dynamics").value;
+    const dValues = Object.values(dBoxes);
+    return dValues.some((d) => !!d);
   }
 
   _isEmpty(obj) {

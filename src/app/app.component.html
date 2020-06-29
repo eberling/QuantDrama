@@ -1,4 +1,4 @@
-<div *ngIf="false" class="flex flex-col min-h-screen md:p-8 App">
+<div *ngIf="true" class="flex flex-col min-h-screen md:p-8 App">
   <header class="App--header">
     <h1>
       Quantitative TV-Show Analysis:
@@ -172,14 +172,14 @@
               </label>
             </div>
             <button
-              [disabled]="!_isDrawButtonActive()"
+              [disabled]="!(_isCharactersSelected() && _isDynamicsSelected())"
               class="w-full"
               (click)="onDraw(false)"
             >
               Draw Graph
             </button>
             <button
-              [disabled]="!_isDrawButtonActive()"
+              [disabled]="!_isCharactersSelected()"
               class="w-full"
               (click)="onDraw(true)"
             >
@@ -211,3 +211,5 @@
   </footer>
 </div>
 <app-chart></app-chart>
+<app-dynamic-chart></app-dynamic-chart>
+<app-hamming-chart></app-hamming-chart>

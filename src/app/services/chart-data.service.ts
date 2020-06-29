@@ -1,11 +1,14 @@
-import { Episode } from 'src/analysis/interface-show';
-import { FirebaseDataService } from './firebase-data.service';
-import { Observable, Subject } from "rxjs";
-import { map } from "rxjs/operators";
+import { Episode } from "src/analysis/interface-show";
+import { FirebaseDataService } from "./firebase-data.service";
+import { Observable, Subject, of, forkJoin } from "rxjs";
+import { map, mergeMap, toArray, tap } from "rxjs/operators";
 import { GraphDataService } from "./graph-data.service";
 import { Injectable } from "@angular/core";
 import {
-  sumAllDynamicsForSeason
+  sumAllDynamicsForSeason,
+  mergeAllDynamicsMaps,
+  calculateHammingForSeason,
+  combineHammingWithTvShowDynamicsMap,
 } from "src/analysis/analysis";
 
 @Injectable({
@@ -13,14 +16,36 @@ import {
 })
 export class ChartDataService {
   countedCharsChartData$: Observable<any[]>;
+  dynamicHammingChartData$: Observable<
+    {
+      pair: string[];
+      dynamicType: string;
+      episodesWithHamming: {
+        episode: Episode;
+        hammingObject: {
+          hamming: number;
+          relativeHamming: number;
+        };
+      }[];
+      totalRelHamming: number;
+      totalAbsHamming: number;
+    }[]
+  >;
 
-  constructor(private graphDataService: GraphDataService, private dataService: FirebaseDataService) {
+  constructor(
+    private graphDataService: GraphDataService,
+    private dataService: FirebaseDataService
+  ) {
     this.countedCharsChartData$ = this.charCountData();
-    console.log("ser loaded")
-    this.dataService.getEpisodes$(1).subscribe((episodes: Episode[]) => {
-      const x = sumAllDynamicsForSeason(episodes)
-      console.log("XX", x);
-    })
+
+    // this.dataService.getEpisodes$(1).subscribe((episodes: Episode[]) => {
+    //   const x = sumAllDynamicsForSeason(episodes);
+    //   const y = calculateHammingForSeason(episodes);
+    //   combineHammingWithTvShowDynamicsMap(x, y);
+    //   // const z = addHammingToSeasonDynamicsMap(x,y);
+    // });
+
+    this.dynamicHammingChartData$ = this.allSeasonsTopDynamicsData();
   }
 
   charCountData() {
@@ -34,4 +59,35 @@ export class ChartDataService {
     );
   }
 
+  allSeasonsTopDynamicsData() {
+    const nums = of(1, 2, 3, 4, 5, 6, 7);
+    const seasons = nums.pipe(
+      mergeMap(
+        (num) => <Observable<Episode[]>>this.dataService.getEpisodes$(num)
+      ),
+      toArray()
+    );
+    const data = seasons.pipe(
+      map((seasons) => {
+        // console.log(
+        //   "ChartDataService -> allSeasonsTopDynamicsData -> seasons",
+        //   seasons
+        // );
+        const maps = seasons.map((season) => sumAllDynamicsForSeason(season));
+        const hammings = seasons.map((season) =>
+          calculateHammingForSeason(season)
+        );
+        const flatHammings = hammings.reduce((acc, curr) => acc.concat(curr));
+        // console.log(
+        //   "ChartDataService -> allSeasonsTopDynamicsData -> maps",
+        //   maps
+        // );
+        const merged = mergeAllDynamicsMaps(maps);
+
+        const data = combineHammingWithTvShowDynamicsMap(merged, flatHammings);
+        return data;
+      })
+    );
+    return data;
+  }
 }
