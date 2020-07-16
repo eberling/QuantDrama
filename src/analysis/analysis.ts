@@ -499,4 +499,5 @@ export {
   filterCharsFromEpisode,
   getCharacterSignatures,
   calculateJaccard,
+  arraysEqual,
 };

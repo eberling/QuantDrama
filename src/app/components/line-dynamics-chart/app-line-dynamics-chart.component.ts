@@ -7,11 +7,11 @@ import { Component } from "@angular/core";
 import { arraysEqual } from "src/analysis/analysis";
 
 @Component({
-  selector: "app-dynamic-chart",
-  templateUrl: "./app-dynamic-chart.component.html",
-  styleUrls: ["./app-dynamic-chart.component.scss"],
+  selector: "app-line-dynamic-chart",
+  templateUrl: "./app-line-dynamics-chart.component.html",
+  styleUrls: ["./app-line-dynamics-chart.component.scss"],
 })
-export class AppDynamicChartComponent {
+export class AppLineDynamicsChartComponent {
   multi: any[];
   view: any[] = [700, 300];
   dynamicHammingData: {
@@ -87,77 +87,155 @@ export class AppDynamicChartComponent {
   testData() {
     return [
       {
-        name: "Germany",
+        name: "Tunisia",
         series: [
           {
-            name: "2010",
-            value: 73000000,
+            value: 3587,
+            name: "2016-09-18T20:33:14.902Z",
           },
           {
-            name: "2011",
-            value: 89400000,
+            value: 5802,
+            name: "2016-09-22T01:12:35.469Z",
           },
           {
-            name: "1990",
-            value: 62000000,
-          },
-        ],
-      },
-
-      {
-        name: "USA",
-        series: [
-          {
-            name: "2010",
-            value: 309000000,
+            value: 5970,
+            name: "2016-09-20T09:53:53.226Z",
           },
           {
-            name: "2011",
-            value: 311000000,
+            value: 6026,
+            name: "2016-09-15T04:04:25.634Z",
           },
           {
-            name: "1990",
-            value: 250000000,
-          },
-        ],
-      },
-
-      {
-        name: "France",
-        series: [
-          {
-            name: "2010",
-            value: 50000020,
-          },
-          {
-            name: "2011",
-            value: 58000000,
-          },
-          {
-            name: "1990",
-            value: 58000000,
+            value: 5117,
+            name: "2016-09-17T12:40:53.514Z",
           },
         ],
       },
       {
-        name: "UK",
+        name: "Puerto Rico",
         series: [
           {
-            name: "2010",
-            value: 62000000,
+            value: 4939,
+            name: "2016-09-18T20:33:14.902Z",
           },
           {
-            name: "1990",
-            value: 57000000,
+            value: 3266,
+            name: "2016-09-22T01:12:35.469Z",
+          },
+          {
+            value: 3452,
+            name: "2016-09-20T09:53:53.226Z",
+          },
+          {
+            value: 5733,
+            name: "2016-09-15T04:04:25.634Z",
+          },
+          {
+            value: 5550,
+            name: "2016-09-17T12:40:53.514Z",
+          },
+        ],
+      },
+      {
+        name: "Guinea",
+        series: [
+          {
+            value: 3260,
+            name: "2016-09-18T20:33:14.902Z",
+          },
+          {
+            value: 6274,
+            name: "2016-09-22T01:12:35.469Z",
+          },
+          {
+            value: 3418,
+            name: "2016-09-20T09:53:53.226Z",
+          },
+          {
+            value: 6967,
+            name: "2016-09-15T04:04:25.634Z",
+          },
+          {
+            value: 3075,
+            name: "2016-09-17T12:40:53.514Z",
+          },
+        ],
+      },
+      {
+        name: "Mayotte",
+        series: [
+          {
+            value: 3695,
+            name: "2016-09-18T20:33:14.902Z",
+          },
+          {
+            value: 2185,
+            name: "2016-09-22T01:12:35.469Z",
+          },
+          {
+            value: 4164,
+            name: "2016-09-20T09:53:53.226Z",
+          },
+          {
+            value: 5898,
+            name: "2016-09-15T04:04:25.634Z",
+          },
+          {
+            value: 3614,
+            name: "2016-09-17T12:40:53.514Z",
+          },
+        ],
+      },
+      {
+        name: "Rwanda",
+        series: [
+          {
+            value: 6084,
+            name: "2016-09-18T20:33:14.902Z",
+          },
+          {
+            value: 2566,
+            name: "2016-09-22T01:12:35.469Z",
+          },
+          {
+            value: 4242,
+            name: "2016-09-20T09:53:53.226Z",
+          },
+          {
+            value: 2708,
+            name: "2016-09-15T04:04:25.634Z",
+          },
+          {
+            value: 6757,
+            name: "2016-09-17T12:40:53.514Z",
           },
         ],
       },
     ];
   }
 
-  odoQuark() {
-    const chars = ["ODO", "QUARK"];
+  /*
+   [
+    {"name": "Domination"
+    "series": {
+      value: "X Achse",
+      name: "Y Achse"
+    }
+    }
 
+   ]
+  */
+  odoQuark() {
+    const chars = [
+      "BASHIR",
+      "SISKO",
+      "O'BRIEN",
+      "DAX",
+      "WORF",
+      "KIRA",
+      "ODO",
+      "QUARK",
+    ];
     let chartData = [];
     for (let index = 1; index < 8; index++) {
       let seasonBlock = { name: `Season ${index}` };

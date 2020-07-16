@@ -77,7 +77,7 @@ export class GraphDataService {
       this.episodeDensity = calculateEpisodeDensity(
         episode.chars,
         episode.scenes
-      );
+      ).toFixed(2);
     });
   }
 

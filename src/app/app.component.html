@@ -1,15 +1,18 @@
 <div *ngIf="true" class="flex flex-col min-h-screen md:p-8 App">
   <header class="App--header">
     <h1>
-      Quantitative TV-Show Analysis:
+      Quantitative Analysis:
     </h1>
     <h2>
-      Deep Space 9 - Character Dynamics
+      Character Relationships in Star Trek: Deep Space 9
     </h2>
   </header>
+  <section class="py-10 mx-auto">
+    <app-chart></app-chart>
+  </section>
   <main>
     <!-- <div class="grid justify-center grid-cols-1 App--data md:grid-cols-2"> -->
-    <section class="max-w-md pb-20 mx-auto text-justify">
+    <section *ngIf="false" class="max-w-md pb-20 mx-auto text-justify">
       In his book "Poetica Matematica", Solomon Marcus proposed mathematical
       methodologies of analysing stage plays. He defined four forms of
       interrelationships between stage characters:
@@ -27,7 +30,8 @@
       characters appear simultaneously and share at least one line of dialog.
     </section>
 
-    <section class="max-w-4xl pb-20 mx-auto">
+    <section class="max-w-4xl pt-10 pb-20 mx-auto">
+      <h1 class="pb-5 text-xl text-center">Character Configuration Tool</h1>
       <div class="flex flex-wrap items-center pb-16 m-auto justify-evenly">
         <form
           [formGroup]="form"
@@ -54,7 +58,7 @@
           </button>
         </div> -->
           <ng-container>
-            <label>Choose a Season:</label>
+            <label class="text-center">Choose a Season:</label>
             <div class="flex justify-center my-1 select-container">
               <select
                 required
@@ -75,10 +79,7 @@
               </select>
               <a
                 class="button dl-button"
-                *ngIf="
-                  (dataService.episodes$ | async) &&
-                  (dataService.selectedSeason$ | async)
-                "
+                *ngIf="dataService.episodes$ | async"
                 (click)="csvService.downloadSeasonJSON()"
               >
                 JSON
@@ -89,6 +90,7 @@
             <label
               [style.opacity]="(dataService.isLoading$ | async) ? 0.3 : 1"
               (click)="graphDataService.getAllUniqueChars()"
+              class="text-center"
             >
               Choose an Episode:
             </label>
@@ -119,7 +121,9 @@
             </div>
           </ng-container>
           <ng-container *ngIf="!_isEmpty(form.get('chars').value)">
-            <label (click)="graphDataService.getAllUniqueCharsAndCount()"
+            <label
+              class="text-center"
+              (click)="graphDataService.getAllUniqueCharsAndCount()"
               >Choose Characters:</label
             >
             <div class="grid grid-cols-2 p-2">
@@ -155,7 +159,7 @@
           </ng-container>
           <ng-container>
             <!-- TOOD <ng-container *ngIf="chars && relationships"> -->
-            <label class="">Choose Relationships: </label>
+            <label class="text-center">Choose Relationships: </label>
             <div class="grid grid-cols-2 my-1">
               <label
                 class="text-center button"
@@ -194,15 +198,14 @@
           "
         ></app-graph>
       </div>
+
       <app-matrix-table></app-matrix-table>
     </section>
-    <section *ngIf="dataService.selectedEpisode$ | async as episode">
-      Season: {{ episode.season }} Episode:{{ episode.episodeNum }} "{{
-        episode.title
-      }}" Density:
-      {{ graphDataService.episodeDensity }}
-    </section>
   </main>
+  <div *ngIf="false" class="pb-20 mx-auto">
+    <app-dynamic-chart></app-dynamic-chart>
+    <app-hamming-chart></app-hamming-chart>
+  </div>
   <footer class="mt-auto text-xs text-center">
     All transcripts are taken from chakoteya.net. Star Trek® and related marks
     are trademarks of CBS Studios Inc. Copyright© 1966, Present. The Star Trek
@@ -210,6 +213,3 @@
     All other copyrights property of their respective holders.
   </footer>
 </div>
-<app-chart></app-chart>
-<app-dynamic-chart></app-dynamic-chart>
-<app-hamming-chart></app-hamming-chart>

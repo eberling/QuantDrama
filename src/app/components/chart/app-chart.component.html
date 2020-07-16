@@ -1,4 +1,8 @@
 <ng-container *ngIf="countedCharsChartData">
+  <p class="text-center">
+    The number a character has appeared in all 7 seasons (total of 176 episodes)
+    counted by episodes:
+  </p>
   <ngx-charts-bar-vertical
     [view]="view"
     [scheme]="colorScheme2"
@@ -9,9 +13,8 @@
     [legend]="showLegend"
     [showXAxisLabel]="false"
     [showYAxisLabel]="showYAxisLabel"
-    [xAxisLabel]="xAxisLabel"
+    [xAxisLabel]="'Characters'"
     [yAxisLabel]="yAxisLabel"
-    [xAxisTicks]="[]"
     [barPadding]="1"
     (select)="onSelect($event)"
   >

@@ -1,8 +1,13 @@
 <section *ngIf="chars" class="text-center">
   <h1>Configuration Matrix</h1>
-  Density:
-  {{ graphDataService.episodeDensity }}
-  this is a configuration matrix where stuff mean some
+  <!-- Density:
+  {{ graphDataService.episodeDensity }} -->
+  <section class="text-center">
+    Season {{ selectedEpisode.season }} Episode
+    {{ selectedEpisode.episodeNum }}: "{{ selectedEpisode.title }}" - Density:
+    {{ graphDataService.episodeDensity }}
+  </section>
+  <!-- this is a configuration matrix where stuff mean some -->
   <div class="relative border rounded-lg border-color-var margin-3">
     <a class="button dl-button" (click)="csvService.downloadMatrixCSV()">
       CSV

@@ -14,6 +14,7 @@ import { getCharacterSignatures } from "src/analysis/analysis";
 export class AppMatrixTableComponent implements OnInit {
   chars: EpisodeChar[];
   scenes: Scene[];
+  selectedEpisode;
   tableData;
   noData;
 
@@ -36,6 +37,10 @@ export class AppMatrixTableComponent implements OnInit {
         }
       }
     );
+
+    this.dataService.selectedEpisode$.subscribe((x) => {
+      this.selectedEpisode = x;
+    });
   }
 
   appearsIn(char, scene) {

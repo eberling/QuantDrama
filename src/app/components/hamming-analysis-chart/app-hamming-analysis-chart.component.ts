@@ -6,11 +6,11 @@ import { Component } from "@angular/core";
 // import { multi } from "./data";
 
 @Component({
-  selector: "app-hamming-chart",
-  templateUrl: "./app-hamming-chart.component.html",
-  styleUrls: ["./app-hamming-chart.component.scss"],
+  selector: "app-hamming-analysis-chart",
+  templateUrl: "./app-hamming-analysis-chart.component.html",
+  styleUrls: ["./app-hamming-analysis-chart.component.scss"],
 })
-export class AppHammingChartComponent {
+export class AppHammingAnalysisChartComponent {
   multi: any[];
   view: any[] = [700, 300];
   dynamicHammingData: {
@@ -66,7 +66,7 @@ export class AppHammingChartComponent {
       )
       .subscribe((x) => {
         this.dynamicHammingData = x;
-        this.odoQuark();
+        this.distanceToAllOthers();
       });
   }
 
@@ -153,52 +153,43 @@ export class AppHammingChartComponent {
     ];
   }
 
-  odoQuark() {
-    const chars = ["ODO", "QUARK"];
+  /*
+   [
+    {"name": "Kira"
+    "series": {
+      value: "Hamming Distance",
+      name: "episode"
+    }
+    }
 
+   ]
+  */
+
+  distanceToAllOthers() {
+    const chars = [
+      "BASHIR",
+      "SISKO",
+      "O'BRIEN",
+      "DAX",
+      "WORF",
+      "KIRA",
+      "ODO",
+      "QUARK",
+    ];
     let chartData = [];
+    const seasonArray = this.chartDataService.allSeasonsAsArray();
+    // for each episode, check for each pair what hamming distance they have
+    seasonArray.pipe(map((x) => {}));
     for (let index = 1; index < 8; index++) {
       let seasonBlock = { name: `Season ${index}` };
 
       let series = [
         { name: "dominates" },
         { name: "alternative" },
-        // { name: "concomitant" },
+        { name: "concomitant" },
+        { name: "independent" },
       ];
-
-      const seriesWithValues = series.map((dynamic) => {
-        const odoQuarkDyn = this.dynamicHammingData.find((el) => {
-          const isDyn = el.dynamicType === dynamic.name;
-          const isOdo = el.pair.includes("ODO");
-          const isQuark = el.pair.includes("QUARK");
-          return isDyn && isOdo && isQuark;
-        });
-
-        let hammingArr: {
-          episode: Episode;
-          hammingObject: {
-            hamming: number;
-            relativeHamming: number;
-          };
-        }[] = [];
-
-        if (odoQuarkDyn) {
-          hammingArr = odoQuarkDyn.episodesWithHamming.filter((el) => {
-            return el.episode.season === index;
-          });
-        }
-        const total = hammingArr.reduce((acc, curr) => {
-          return acc + curr.hammingObject.hamming;
-        }, 0);
-        const avg = total / hammingArr.length;
-
-        return { name: dynamic.name, value: avg ? avg : 0 };
-      });
-
-      seasonBlock["series"] = seriesWithValues;
-      chartData.push(seasonBlock);
+      this.chartDataService.dynamicHammingChartData$;
     }
-    console.log(chartData);
-    this.dynamicHammingChartData = chartData;
   }
 }

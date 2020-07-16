@@ -1,7 +1,7 @@
 import { Episode } from "src/analysis/interface-show";
 import { FirebaseDataService } from "./firebase-data.service";
 import { Observable, Subject, of, forkJoin } from "rxjs";
-import { map, mergeMap, toArray, tap } from "rxjs/operators";
+import { map, mergeMap, toArray, tap, concatMap } from "rxjs/operators";
 import { GraphDataService } from "./graph-data.service";
 import { Injectable } from "@angular/core";
 import {
@@ -9,6 +9,7 @@ import {
   mergeAllDynamicsMaps,
   calculateHammingForSeason,
   combineHammingWithTvShowDynamicsMap,
+  calculateHammingInEpisode,
 } from "src/analysis/analysis";
 
 @Injectable({
@@ -59,20 +60,25 @@ export class ChartDataService {
     );
   }
 
-  allSeasonsTopDynamicsData() {
+  allSeasonsAsArray() {
     const nums = of(1, 2, 3, 4, 5, 6, 7);
-    const seasons = nums.pipe(
-      mergeMap(
+    return nums.pipe(
+      concatMap(
         (num) => <Observable<Episode[]>>this.dataService.getEpisodes$(num)
       ),
       toArray()
     );
+  }
+
+  allSeasonsTopDynamicsData() {
+    const nums = of(1, 2, 3, 4, 5, 6, 7);
+    const seasons = this.allSeasonsAsArray();
     const data = seasons.pipe(
       map((seasons) => {
-        // console.log(
-        //   "ChartDataService -> allSeasonsTopDynamicsData -> seasons",
-        //   seasons
-        // );
+        console.log(
+          "ChartDataService -> allSeasonsTopDynamicsData -> seasons",
+          seasons
+        );
         const maps = seasons.map((season) => sumAllDynamicsForSeason(season));
         const hammings = seasons.map((season) =>
           calculateHammingForSeason(season)
