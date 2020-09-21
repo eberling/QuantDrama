@@ -3,17 +3,6 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 var serviceAccount = require("../quantdrama-firebase-adminsdk.json");
 
-// episodes[Episode] => Episode{ title, characters[string] , scenes[Scene]} => Scene { title characters[string] }
-// async function main() {
-//   const seasonUrls = await getLinks(site + "episodes.htm", 1);
-//   const episodes = await Promise.all(
-//     seasonUrls.map((link, i) => {
-//       return getEpisode(site + link);
-//     })
-//   );
-//   console.dir(episodes, { depth: null });
-// }
-
 export const getEpisode = async (url) => {
   try {
     let episode = {
@@ -90,6 +79,8 @@ export const getLinks = async (url, season = 0) => {
     console.log("[error getting Links] ", e);
   }
 };
+
+// test getEpisode Function with an Episode from chakoteya
 
 // const test = () => {
 //   getEpisode("http://www.chakoteya.net/DS9/548.htm").then(

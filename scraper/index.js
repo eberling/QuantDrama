@@ -2,9 +2,6 @@ import "dotenv/config";
 import * as scraper from "./scraper";
 var admin = require("firebase-admin");
 import config from "./../quantdrama-firebase-adminsdk.json";
-// import * as admin from "firebase-admin";
-// import { firestore } from 'firebase';
-// require("firebase/firestore");
 admin.initializeApp({
   credential: admin.credential.cert(config),
   databaseURL: "https://quantdrama.firebaseio.com",
@@ -42,6 +39,7 @@ const main = async () => {
               episodeNum: i + 1,
             };
             console.dir(object, { depth: null });
+            // commented out for safety reasons. This part pushes into the Firebase Database.
             // const docRef = db
             //   .collection(`season_${links.season}`)
             //   .doc()

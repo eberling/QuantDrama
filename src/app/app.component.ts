@@ -121,15 +121,6 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  // // if true, selects seasonMode
-  // onModeSelect(val) {
-  //   this.dataService.episodes$.next(null);
-  //   this.dataService.chars$.next(null);
-  //   this.dataService.selectedChars$.next(null);
-  //   this.graphDataService.tableData$.next(null);
-  //   this.dataService.seasonMode$.next(val);
-  // }
-
   _isCharactersSelected() {
     const cBoxes = this.form.get("chars").value;
     const cValues = Object.values(cBoxes);

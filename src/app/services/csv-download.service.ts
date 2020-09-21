@@ -125,26 +125,6 @@ export class CsvDownloadService {
     );
   }
 
-  // this.graphDataService.tableData$.subscribe(
-  //   (data: { epChars: EpisodeChar[]; episode: Episode }) => {
-  //     if (data) {
-  //       this.chars = data.epChars;
-  //       this.scenes = data.episode.scenes;
-  //     } else {
-  //       console.log("no data ");
-  //       this.scenes = null;
-  //       this.chars = null;
-  //     }
-  //   }
-  // );
-  // graphLinks
-
-  //   0: GRAPHLINKS
-  // id: "ajc4q"
-  // label: "dominates"
-  // source: "ODO"
-  // target: "ASOTH"
-
   _prepareCSVGraph(obs: Observable<any>) {
     return obs.pipe(
       filter((data) => data),
@@ -178,21 +158,6 @@ export class CsvDownloadService {
       )
     );
   }
-
-  // downloadFile(data) {
-  //   console.log("blob", data);
-  //   const blob = new Blob([data], { type: "text/json" });
-  //   const url = window.URL.createObjectURL(blob);
-  //   window.location.href = url;
-  // }
-
-  // generateDownloadJsonUri(data) {
-  //   const theJSON = JSON.stringify(data);
-  //   const uri = this.sanitizer.bypassSecurityTrustUrl(
-  //     "data:text/json;charset=UTF-8," + encodeURIComponent(theJSON)
-  //   );
-  //   // this.downloadJsonHref = uri;
-  // }
 
   downloadCSVBoi(filename, data, type) {
     const blob = new Blob([data], { type: type });
